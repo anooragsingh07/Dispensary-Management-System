@@ -1,0 +1,98 @@
+.login-page{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 100px 160px;
+    box-sizing: border-box;
+    gap: 100px;
+    background: url("https://images.shiksha.com/mediadata/images/1769959402phpddueP3.jpeg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.login-page-card {
+    width: 500px;
+    padding: 40px;
+    border-radius: 10px;
+
+    background: rgba(255, 255, 255, 0.92);
+
+    border: 1px solid rgba(0, 0, 0, 0.08);
+
+    box-shadow:
+        0 10px 35px rgba(0, 0, 0, 0.15);
+
+    box-sizing: border-box;
+    height: fit-content;
+
+    transition: all 0.3s ease;
+}
+
+.login-page-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.2);
+}
+.card-header-form{
+    text-align: center;
+    font-size: 30px;
+    color: #255674;
+    font-weight: 600;
+}
+
+.form-input-fields{
+    margin: 20px 0px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.form-input{
+    width: 100%;
+    padding:15px 20px;
+    box-sizing: border-box;
+    font-size: 16px;
+    outline: none;
+    border-radius: 10px;
+}
+.form-btn{
+    border-radius: 10px;
+    width: 100%;
+    padding: 15px;
+    text-align: center;
+    border: 1px solid;
+    box-sizing: border-box;
+    color: white;
+    background-color: #255674;
+    font-size: 20px;
+    cursor: pointer;
+}
+.forgot-password-link{
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.signup-page-card{
+    width: 500px;
+    padding: 40px;
+    border-radius: 10px;
+
+    background: rgba(255, 255, 255, 0.92);
+
+    border: 1px solid rgba(0, 0, 0, 0.08);
+
+    box-shadow:
+        0 10px 35px rgba(0, 0, 0, 0.15);
+
+    box-sizing: border-box;
+    height: fit-content;
+
+    transition: all 0.3s ease;
+}
+.signup-page-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.2);
+}

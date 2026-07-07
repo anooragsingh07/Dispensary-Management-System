@@ -1,0 +1,44 @@
+import React, { useState, useEffect } from 'react'
+import './gallary.css'
+import axios from 'axios'
+const Gallary = (props) => {
+
+
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+
+    const fetchData = async () => {
+      props.showLoader()
+      await axios.get('http://localhost:4000/api/gallary/get').then(resp => {
+        setData(resp.data.images || [])
+      }).catch(err => {
+        console.log(err)
+      }).finally(() => {
+        props.hideLoader()
+      })
+    }
+
+    fetchData()
+  }, [])
+  return (
+    <div className='gallary-home'>
+
+      {
+        data.map((item, index) => {
+          return (
+            <div className='gallary-home-image-block' key={item._id || index}>
+              <img className='gallary-home-image' src={item.link} alt='gallery' />
+            </div>
+          );
+        })
+      }
+
+      {
+        data.length === 0 && <div>No gallery images added yet.</div>
+      }
+    </div>
+  )
+}
+
+export default Gallary
