@@ -5,32 +5,34 @@ import axios from 'axios'
 const NearByHospitals = (props) => {
   const hosptalheaders = ["Sn No.", "Name", "Address", "Contact"]
 
-  //const [rowData, setRowData] = useState([]);
- const rowData = [
-  {
-    sno :"1"
-  },
-  {
-    sno : "2"
+  const [rowData, setRowData] = useState([]);
+
+  const getFormattedData = (data) => {
+    let newarr = data.map((item, ind) => {
+      return {
+        srNo: ind + 1,
+        name: item.name,
+        address: item.address,
+        contact: item.contact
+      }
+    })
+    setRowData(newarr);
   }
- ]
-  // const getFormattedData = (data) => {
-  //   let newarr = data.map((item, ind) => {
-  //     return {
-  //       // Please watch the Video for full code
-  //     }
-  //   })
-  //   setRowData(newarr);
-  // }
 
-  // useEffect(() => {
-  //   props.showLoader()
-  //   {
-  //     // Please watch the Video for full code
-  //   }
+  const fetchData = async () => {
+    props.showLoader()
+    await axios.get('http://localhost:4000/api/hospital/get').then(resp => {
+      getFormattedData(resp.data.hospitals || [])
+    }).catch(err => {
+      console.log(err)
+    }).finally(() => {
+      props.hideLoader()
+    })
+  }
 
-  //   fetchData()
-  // }, [])
+  useEffect(() => {
+    fetchData()
+  }, [])
   return (
     <div>
       <TableComp header={hosptalheaders} data={rowData} />

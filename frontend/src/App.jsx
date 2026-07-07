@@ -22,8 +22,8 @@ function App() {
   const [isLogin, setIsLogin] = useState(localStorage.getItem("isLogin"));
   let role = localStorage.getItem("userInfo") ? JSON.parse(localStorage.getItem("userInfo")).role : null;
   let id = localStorage.getItem("userInfo") ? JSON.parse(localStorage.getItem("userInfo"))._id : null;
-  const canManage = isLogin && role !== 'student';
-
+  // const canManage = isLogin && role !== 'student';
+  const canManage = true;//remove thisd after commenting upp
 
   const handleLogin = (value) => {
     setIsLogin(value)

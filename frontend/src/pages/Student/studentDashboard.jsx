@@ -16,7 +16,6 @@ const StudentDashboard = (props) => {
         props.showLoader();
 
         await axios.get(`http://localhost:4000/api/history/get?roll=${userInfo?.roll}`, { withCredentials: true }).then(resp => {
-            console.log(resp)
             setHistory(resp.data.history)
         }).catch(err => {
             toast.error(err?.response?.data?.error)
@@ -36,9 +35,8 @@ const StudentDashboard = (props) => {
     return (
         <div className='student-dashboard'>
             <div className='student-info'>
-                {
-                    // Please watch the Video for full code
-                }
+                <div className='welcone-user'>Welcome <span>{userInfo?.name}</span></div>
+                <div className='welcone-user'>Roll No. <span>{userInfo?.roll}</span></div>
 
             </div>
 
@@ -51,13 +49,17 @@ const StudentDashboard = (props) => {
 
                 <div className='student-row-items'>
                     {
-                        history.map((item, index) => {
+                        history.map((item) => {
                             return (
-                                {
-                                    // Please watch the Video for full code
-                                }
+                                <div className='student-row-item' key={item._id}>
+                                    <RemoveRedEyeIcon className='delete-icon' onClick={() => handleOnOfModal(item)} />
+                                    <div>{item.createdAt?.slice(0, 10).split("-").reverse().join("-")}</div>
+                                </div>
                             );
                         })
+                    }
+                    {
+                        history.length === 0 && <div>No records yet.</div>
                     }
 
                 </div>

@@ -3,17 +3,17 @@ import './searchBox.css'
 import SearchIcon from '@mui/icons-material/Search';
 const SearchBox = (props) => {
   const placeholder = props.placeholder ? props.placeholder : "";
-  const value = props.value ? props.value : "";
+  const value = props.value ?? "";
 
   const handleOnChange = (event) => {
-    {
-      // Please watch the Video for full code
+    if (props.onChange) {
+      props.onChange(event.target.value)
     }
   }
 
   const handleClick = () => {
-    {
-      // Please watch the Video for full code
+    if (props.handleClick) {
+      props.handleClick(value)
     }
   }
 

@@ -3,7 +3,7 @@ import './login.css'
 import { toast, ToastContainer } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import ForgotModal from '../../components/FogotModal/forgotModal'
+import ForgotModal from '../../components/ForgotModal/forgotModal'
 const Login = (props) => {
 
     const navigate = useNavigate();
