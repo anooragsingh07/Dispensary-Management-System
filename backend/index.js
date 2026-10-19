@@ -18,7 +18,9 @@ app.use(cookieParser());
 app.use(cors({
     credentials: true,
     origin(origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        const isLocalDevelopmentOrigin = process.env.NODE_ENV !== 'production'
+            && /^https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(origin || '');
+        if (!origin || allowedOrigins.includes(origin) || isLocalDevelopmentOrigin) return callback(null, true);
         return callback(new Error('This website is not allowed to access the API'));
     },
 }));
