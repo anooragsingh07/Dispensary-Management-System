@@ -82,7 +82,6 @@ const RegisterStudent = (props) => {
                     studentId: data.student._id,
                     email: data.student.email,
                     password: data.temporaryPassword,
-                    passwordDelivered: data.passwordDelivered,
                 });
                 toast.success(data.message || 'Student account created');
             }
@@ -136,7 +135,7 @@ const RegisterStudent = (props) => {
         {createdStudentAccount?.password && studentDetail._id === createdStudentAccount.studentId && <section className="student-credentials-card" aria-live="polite">
             <div className="student-credentials-heading">
                 <div><p className="eyebrow">STUDENT SIGN-IN</p><h2>Account created</h2></div>
-                <span>{createdStudentAccount.passwordDelivered ? 'Email sent' : 'Share with student'}</span>
+                <span>Share with student</span>
             </div>
             <div className="student-credentials-grid">
                 <div className="student-credential-item"><span>Login email</span><strong>{createdStudentAccount.email}</strong></div>
@@ -148,7 +147,7 @@ const RegisterStudent = (props) => {
                     </div>
                 </div>
             </div>
-            <p className="student-credentials-note">Share or save this password now. It won’t be shown again after you search for another student or leave this page.{createdStudentAccount.passwordDelivered ? ' A copy was also emailed to the student.' : ''}</p>
+            <p className="student-credentials-note">Share or save this password now. It won’t be shown again after you search for another student or leave this page.</p>
         </section>}
 
         {studentDetail._id && <section className="student-consultation-history">

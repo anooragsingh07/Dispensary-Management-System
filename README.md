@@ -33,7 +33,6 @@ MongoDB schema validation, unique indexes, and Mongoose validators enforce the a
 - Node.js 20.13 or newer and npm.
 - A MongoDB database, either local or hosted.
 - Cloudinary unsigned upload settings for gallery uploads (optional).
-- SMTP credentials for optional student welcome emails.
 
 ### Start the API
 
@@ -86,7 +85,6 @@ Vite prints the local website URL when it starts.
 - Set `NODE_ENV=production`, `PORT`, `MONGO_URI`, and a unique, long `JWT_SECRET` in the API environment.
 - Set `FRONTEND_ORIGINS` to the exact website origin or comma-separated origins. Do not use `*` with credentialed cookies.
 - Set `COOKIE_SAME_SITE=lax` when the website and API share a site. For a genuinely cross-site deployment, use `COOKIE_SAME_SITE=none` and HTTPS.
-- Set `EMAIL` and `EMAIL_PASSWORD` to enable student welcome emails.
 - Set `VITE_API_BASE_URL` to the public API origin when the website and API use different hosts, then rebuild the frontend.
 - Configure a Cloudinary unsigned upload preset and provide its name and cloud name to the frontend. The API accepts only HTTPS image links.
 

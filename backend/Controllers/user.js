@@ -2,16 +2,10 @@ const User = require('../Models/user');
 const Student = require('../Models/student');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const { getJwtSecret } = require('../Authentication/auth');
 
 const SESSION_LENGTH_MS = 7 * 24 * 60 * 60 * 1000;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL, pass: process.env.EMAIL_PASSWORD },
-});
 
 const cookieOptions = () => ({
     httpOnly: true,
@@ -99,12 +93,6 @@ const createStudentAccount = async ({ profile, email, password }) => {
 const setAuthCookie = (res, user) => {
     const token = require('jsonwebtoken').sign({ userId: user._id, authVersion: user.authVersion || 0 }, getJwtSecret(), { expiresIn: '7d' });
     res.cookie('token', token, { ...cookieOptions(), maxAge: SESSION_LENGTH_MS });
-};
-
-const isMailConfigured = () => Boolean(process.env.EMAIL && process.env.EMAIL_PASSWORD);
-
-const sendMail = async (message) => {
-    await transporter.sendMail({ from: process.env.EMAIL, ...message });
 };
 
 const invalidCredentials = (res) => res.status(401).json({ error: 'Email or password is incorrect' });
@@ -219,20 +207,10 @@ exports.registerStudentByStaff = async (req, res) => {
         const temporaryPassword = crypto.randomBytes(6).toString('base64url');
         const { student, user } = await createStudentAccount({ profile: profileResult.data, email, password: temporaryPassword });
 
-        let passwordDelivered = false;
-        if (isMailConfigured()) {
-            try {
-                await sendMail({ to: email, subject: 'Your dispensary account', text: `Your account is ready. Sign in with ${email} and password ${temporaryPassword}. Keep these sign-in details safe.` });
-                passwordDelivered = true;
-            } catch (mailError) {
-                console.error('Student welcome email failed:', mailError.message);
-            }
-        }
         return res.status(201).json({
             message: 'Student account created',
             student: studentResponse(student, user),
             temporaryPassword,
-            passwordDelivered,
         });
     } catch (error) {
         if (error.code === 11000) return res.status(409).json({ error: 'An account already exists with that email or roll number' });
