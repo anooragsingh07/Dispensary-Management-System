@@ -71,6 +71,7 @@
 .student-password-copy { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; font-size: 12px; }
 .student-password-copy:hover { background: var(--surface-soft); }
 .student-credentials-note { margin: 14px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.student-issue-password { margin-top: 14px; }
 .student-consultation-history { margin-top: 20px; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
 .student-consultation-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; border-bottom: 1px solid var(--border); padding: 18px 22px; }
 .student-consultation-heading .eyebrow { margin: 0 0 5px; color: var(--muted); font-size: 10px; letter-spacing: .08em; }

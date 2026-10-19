@@ -15,6 +15,7 @@ router.put('/update-staff/:id', Authentication.adminAuth, UserController.updateS
 router.delete('/delete-staff/:id', Authentication.adminAuth, UserController.deleteStaff);
 
 router.post('/register-student', Authentication.adminFacultyAuth, UserController.registerStudentByStaff);
+router.post('/issue-student-password/:id', Authentication.adminFacultyAuth, UserController.issueStudentTemporaryPassword);
 router.put('/update-student/:id', Authentication.adminFacultyAuth, UserController.updateStudentById);
 router.get('/get-student/:roll', Authentication.adminFacultyAuth, UserController.getStudentByRollNo);
 

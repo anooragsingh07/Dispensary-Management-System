@@ -21,6 +21,7 @@ const RegisterStudent = (props) => {
     const [selectedConsultation, setSelectedConsultation] = useState(null);
     const [studentDetail, setStudentDetail] = useState(emptyStudent);
     const [createdStudentAccount, setCreatedStudentAccount] = useState(null);
+    const [issuingTemporaryPassword, setIssuingTemporaryPassword] = useState(false);
     const [consultations, setConsultations] = useState([]);
     const [consultationsLoading, setConsultationsLoading] = useState(false);
 
@@ -102,6 +103,30 @@ const RegisterStudent = (props) => {
         }
     };
 
+    const issueTemporaryPassword = async () => {
+        if (!studentDetail._id || issuingTemporaryPassword) return;
+        const confirmed = window.confirm(`Generate a new password for ${studentDetail.name}? This will replace the student's current sign-in password.`);
+        if (!confirmed) return;
+
+        setIssuingTemporaryPassword(true);
+        props.showLoader();
+        try {
+            const { data } = await axios.post(`/api/auth/issue-student-password/${studentDetail._id}`);
+            setCreatedStudentAccount({
+                studentId: studentDetail._id,
+                email: data.email || studentDetail.email,
+                password: data.temporaryPassword,
+                reissued: true,
+            });
+            toast.success(data.message || 'New temporary password generated');
+        } catch (error) {
+            toast.error(error?.response?.data?.error || 'Unable to generate a temporary password');
+        } finally {
+            props.hideLoader();
+            setIssuingTemporaryPassword(false);
+        }
+    };
+
     const handleConsultationSaved = async () => {
         closeConsultationForm();
         await fetchConsultations(studentDetail._id);
@@ -136,7 +161,7 @@ const RegisterStudent = (props) => {
 
         {createdStudentAccount?.password && studentDetail._id === createdStudentAccount.studentId && <section className="student-credentials-card" aria-live="polite">
             <div className="student-credentials-heading">
-                <div><p className="eyebrow">STUDENT SIGN-IN</p><h2>Account created</h2></div>
+                <div><p className="eyebrow">STUDENT SIGN-IN</p><h2>{createdStudentAccount.reissued ? 'Temporary password generated' : 'Account created'}</h2></div>
                 <span>Share with student</span>
             </div>
             <div className="student-credentials-grid">
@@ -157,7 +182,10 @@ const RegisterStudent = (props) => {
                 <div><p className="eyebrow">STUDENT SIGN-IN</p><h2>Password not available</h2></div>
                 <span>Stored securely</span>
             </div>
-            <p className="student-credentials-note">Passwords are stored as one-way hashes, so an existing password cannot be viewed here. A new student’s temporary password is shown immediately after registration.</p>
+            <p className="student-credentials-note">The current password cannot be viewed because it is stored securely. Generate a new temporary password to replace it and show the new sign-in details here.</p>
+            <button type="button" className="button-primary student-issue-password" onClick={issueTemporaryPassword} disabled={issuingTemporaryPassword}>
+                {issuingTemporaryPassword ? 'Generating…' : 'Generate temporary password'}
+            </button>
         </section>}
 
         {studentDetail._id && <section className="student-consultation-history">

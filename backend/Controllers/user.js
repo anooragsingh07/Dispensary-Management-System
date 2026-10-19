@@ -194,6 +194,30 @@ exports.getStudentByRollNo = async (req, res) => {
     }
 };
 
+exports.issueStudentTemporaryPassword = async (req, res) => {
+    try {
+        const student = await Student.findById(req.params.id);
+        if (!student) return res.status(404).json({ error: 'Student not found' });
+
+        const user = await User.findOne({ studentId: student._id });
+        if (!user || user.role !== 'student') return res.status(404).json({ error: 'Student login account not found' });
+
+        const temporaryPassword = crypto.randomBytes(9).toString('base64url');
+        user.password = await bcrypt.hash(temporaryPassword, 12);
+        user.authVersion = (user.authVersion || 0) + 1;
+        await user.save();
+
+        return res.status(200).json({
+            message: 'A new temporary password is active. Share it with the student.',
+            email: user.email,
+            temporaryPassword,
+        });
+    } catch (error) {
+        console.error('Student temporary password issue failed:', error);
+        return res.status(500).json({ error: 'Unable to issue a temporary password right now' });
+    }
+};
+
 exports.registerStudentByStaff = async (req, res) => {
     try {
         const email = normalizeEmail(req.body.email);
