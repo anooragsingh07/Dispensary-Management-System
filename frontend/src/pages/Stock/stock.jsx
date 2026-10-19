@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import './stock.css'
 import SearchBox from '../../components/SearchBox/searchBox'
 import TableComp from '../../components/Table/tableComp';
-import axios from 'axios'
+import axios from '@/api/client'
 const Stock = (props) => {
     const [medicineName, setMedicineName] = useState("");
     const [stocks, setStocks] = useState([]);
@@ -22,8 +22,10 @@ const Stock = (props) => {
 
     const fetchData = async () => {
         props.showLoader();
-        const url = medicineName.trim() ? `http://localhost:4000/api/medicine/search?name=${medicineName}` : 'http://localhost:4000/api/medicine/get';
-        await axios.get(url).then(resp => {
+        const request = medicineName.trim()
+            ? axios.get('/api/medicine/search', { params: { name: medicineName } })
+            : axios.get('/api/medicine/get');
+        await request.then(resp => {
             getFormattedData(resp.data.medicines || [])
         }).catch(err => {
             console.log(err)

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import './report.css'
 import SearchBox from '../../../../components/SearchBox/searchBox'
 import DeleteIcon from '@mui/icons-material/Delete';
-import axios from 'axios';
+import axios from '@/api/client';
 import { ToastContainer, toast } from 'react-toastify';
 const Report = (props) => {
     const [searchMedicineName, setSearchmedicineName] = useState("")
@@ -14,8 +14,10 @@ const Report = (props) => {
         setDropDown(value.trim().length > 0)
     }
     const fetchData = async () => {
-        const url = searchMedicineName.trim() ? `http://localhost:4000/api/medicine/search?name=${searchMedicineName}` : 'http://localhost:4000/api/medicine/get';
-        await axios.get(url).then(resp => {
+        const request = searchMedicineName.trim()
+            ? axios.get('/api/medicine/search', { params: { name: searchMedicineName } })
+            : axios.get('/api/medicine/get');
+        await request.then(resp => {
             setData(resp.data.medicines || [])
         }).catch(err => {
             console.log(err)
@@ -56,7 +58,7 @@ const Report = (props) => {
     const checkInputInValid = () => {
         let invalid = false;
         selectedMedicine.map((item) => {
-            if (item.requiredQuantity.trim().length === 0) {
+            if (!Number.isSafeInteger(Number(item.requiredQuantity)) || Number(item.requiredQuantity) < 1) {
                 invalid = true;
             }
         })
@@ -67,7 +69,7 @@ const Report = (props) => {
         if (selectedMedicine.length === 0) return toast.error("Please select any medicine.");
         if (checkInputInValid()) return toast.error("Please enter all the fields.")
         props.showLoader();
-        await axios.post('http://localhost:4000/api/history/add', {
+        await axios.post('/api/history/add', {
             roll: props.studentDetail.roll,
             student: props.studentDetail._id,
             medicines: selectedMedicine
@@ -113,7 +115,7 @@ const Report = (props) => {
                                     <div className='col-1-rm'>{item.name}</div>
                                     <div className='col-2-rm'>{item.quantity}</div>
                                     <div className='col-3-rm'>
-                                        <input className='input-table' type='number' value={item.requiredQuantity} onChange={(event) => onChangeHandle(event, index)} />
+                                        <input className='input-table' type='number' min='1' step='1' value={item.requiredQuantity} onChange={(event) => onChangeHandle(event, index)} />
                                     </div>
                                     <div className='col-4-rm'><DeleteIcon className='delete-icon' onClick={() => handleDelete(item._id)} /></div>
                                 </div>

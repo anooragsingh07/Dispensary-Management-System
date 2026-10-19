@@ -8,8 +8,7 @@ const RecordModal = (props) => {
 
             <div className='student-modal-report'>
                 <div>{history?.student?.name}</div>
-                <div>{history?.student?.email}</div>
-                <div>{history?.roll}</div>
+                <div>Roll No. {history?.roll}</div>
             </div>
 
             <div className='student-details-scroll'>

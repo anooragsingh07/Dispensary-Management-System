@@ -7,7 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import Modal from '../../../components/Modal/modal';
 import MedicineModal from './MedicineModal/medicineModal';
-import axios from 'axios';
+import axios from '@/api/client';
 import { ToastContainer, toast } from 'react-toastify';
 const ManageMedicine = (props) => {
     const [medicineSearch, setMedicineSearch] = useState("")
@@ -29,8 +29,10 @@ const ManageMedicine = (props) => {
     }
     const fetchData = async () => {
         props.showLoader();
-        const url = medicineSearch.trim() ? `http://localhost:4000/api/medicine/search?name=${medicineSearch}` : 'http://localhost:4000/api/medicine/get';
-        await axios.get(url).then(resp => {
+        const request = medicineSearch.trim()
+            ? axios.get('/api/medicine/search', { params: { name: medicineSearch } })
+            : axios.get('/api/medicine/get');
+        await request.then(resp => {
             setData(resp.data.medicines || [])
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to fetch medicines")
@@ -51,7 +53,7 @@ const ManageMedicine = (props) => {
 
     const handleDelete = async (id) => {
         props.showLoader();
-        await axios.delete(`http://localhost:4000/api/medicine/delete/${id}`, { withCredentials: true }).then(resp => {
+        await axios.delete(`/api/medicine/delete/${id}`, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             filterOutMedicine(id)
         }).catch(err => {

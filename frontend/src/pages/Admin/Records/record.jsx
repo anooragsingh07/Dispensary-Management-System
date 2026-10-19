@@ -6,7 +6,7 @@ import SearchBox from '../../../components/SearchBox/searchBox';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import Modal from '../../../components/Modal/modal';
 import RecordModal from './RecordModal/recordModal';
-import axios from 'axios';
+import axios from '@/api/client';
 import { ToastContainer, toast } from 'react-toastify';
 import StudentAllFiles from './StudentAllDetails/studentAllFiles';
 const Record = (props) => {
@@ -39,7 +39,7 @@ const Record = (props) => {
 
     const fetchData = async () => {
         props.showLoader()
-        await axios.get(`http://localhost:4000/api/history/get-history?month=${selectedMonth}&year=${selectedYear}`, { withCredentials: true }).then(response => {
+        await axios.get(`/api/history/get-history?month=${selectedMonth}&year=${selectedYear}`, { withCredentials: true }).then(response => {
             setData(response.data.history)
         }).catch(err => {
             console.log(err)
@@ -60,7 +60,7 @@ const Record = (props) => {
 
     useEffect(() => {
         let arr = [];
-        for (let i = 2025; i <= parseInt(currentYear); i++) {
+        for (let i = 2010; i <= parseInt(currentYear); i++) {
             arr.unshift(i.toString())
         }
 
@@ -95,7 +95,7 @@ const Record = (props) => {
     const handleClick = async () => {
         if (studentRoll.trim().length === 0) return toast.error("Please Enter Correct Roll No.");
         props.showLoader()
-        await axios.get(`http://localhost:4000/api/history/get?roll=${studentRoll}`, { withCredentials: true }).then(resp => {
+        await axios.get(`/api/history/get-student/${encodeURIComponent(studentRoll.trim())}`).then(resp => {
             if ((resp.data.history || []).length === 0) {
                 return toast.error("No records found for this roll number")
             }

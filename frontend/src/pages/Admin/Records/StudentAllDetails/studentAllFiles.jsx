@@ -1,47 +1,40 @@
-import React from 'react'
+import React from 'react';
+import '../RecordModal/recordModal.css';
 
-const StudentAllFiles = (props) => {
+const formatDate = (date) => date ? new Date(date).toLocaleDateString() : 'Date unavailable';
+
+const StudentAllFiles = ({ studnetAllDetails = [] }) => {
+    const student = studnetAllDetails[0]?.student;
     return (
-        <div className='record-modal'>
-
-
-            <div className='student-modal-report'>
-                <div>{props.studnetAllDetails[0]?.student?.name}</div>
-                <div>{props.studnetAllDetails[0]?.student?.email}</div>
-                <div>{props.studnetAllDetails[0]?.roll}</div>
-            </div>
-
-            <div className='student-details-scroll'>
-                {
-                    props.studnetAllDetails.map((item) => {
-                        return (
-                            <div className='student-modal-detail'>
-                                <div className='student-modal-header'>
-                                    {item?.createdAt.slice(0, 10).split("-").reverse().join("-")}
-                                </div>
-
-                                <div className='student-modal-body-student'>
-                                    <div className='student-modal-body-header'>
-                                        <div>Medicine Name</div>
-                                        <div>Quantity</div>
-                                    </div>
-
-                                    <div className='student-modal-body-item'>
-                                        {
-                                            // Please watch the Video for full code
-                                        }
-
-                                    </div>
-                                </div>
+        <div className="record-modal">
+            {student && <div className="student-modal-report">
+                <div>{student.name}</div>
+                <div>Roll No. {studnetAllDetails[0]?.roll}</div>
+            </div>}
+            <div className="student-details-scroll">
+                {studnetAllDetails.map((item) => (
+                    <div className="student-modal-detail" key={item._id}>
+                        <div className="student-modal-header">{formatDate(item.createdAt)}</div>
+                        <div className="student-modal-body-student">
+                            <div className="student-modal-body-header">
+                                <div>Medicine</div>
+                                <div>Quantity</div>
                             </div>
-                        );
-                    })
-                }
-
+                            <div className="student-modal-body-item">
+                                {(item.medicines || []).map((medicine, index) => (
+                                    <div className="student-item-modal" key={`${item._id}-${index}`}>
+                                        <div>{medicine.name}</div>
+                                        <div>{medicine.requiredQuantity}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                {!studnetAllDetails.length && <div>No visit records found.</div>}
             </div>
-
         </div>
-    )
-}
+    );
+};
 
-export default StudentAllFiles
+export default StudentAllFiles;

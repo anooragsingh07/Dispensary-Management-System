@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './medcineModal.css'
 import { ToastContainer, toast } from 'react-toastify';
-import axios from 'axios';
+import axios from '@/api/client';
 const MedicineModal = (props) => {
     const [medicine, setMedicine] = useState({ name: "", quantity: "", usage: "" });
     const handleOnChange = (event, key) => {
@@ -15,7 +15,7 @@ const MedicineModal = (props) => {
 
     const updateValue = async () => {
         props.showLoader();
-        await axios.put(`http://localhost:4000/api/medicine/update/${props.clickedMedicine._id}`, medicine, { withCredentials: true }).then(resp => {
+        await axios.put(`/api/medicine/update/${props.clickedMedicine._id}`, medicine, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             window.location.reload()
         }).catch(err => {
@@ -33,11 +33,11 @@ const MedicineModal = (props) => {
         }
 
 
-        if (medicine.name.trim().length === 0 || !medicine.quantity || medicine.usage.trim().length === 0) {
+        if (medicine.name.trim().length === 0 || medicine.quantity === "" || medicine.usage.trim().length === 0) {
             return toast.error("Please enter all fields")
         }
         props.showLoader();
-        await axios.post('http://localhost:4000/api/medicine/add', medicine, { withCredentials: true }).then(resp => {
+        await axios.post('/api/medicine/add', medicine, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             window.location.reload()
         }).catch(err => {
@@ -55,7 +55,7 @@ const MedicineModal = (props) => {
                     <input value={medicine.name} onChange={(event) => handleOnChange(event, "name")} className='input-box-register' type='text' placeholder='Medicine Name' />
                 </div>
                 <div className='register-input-box'>
-                    <input value={medicine.quantity} onChange={(event) => handleOnChange(event, "quantity")} className='input-box-register' type='number' placeholder='Quantity' />
+                    <input value={medicine.quantity} onChange={(event) => handleOnChange(event, "quantity")} className='input-box-register' type='number' min='0' step='1' placeholder='Quantity' />
                 </div>
                 <div className='register-input-box'>
                     <input value={medicine.usage} onChange={(event) => handleOnChange(event, "usage")} className='input-box-register' type='text' placeholder='Usage' />

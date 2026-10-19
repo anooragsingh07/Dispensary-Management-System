@@ -26,6 +26,8 @@ app.use(cors({
 app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok' }));
 
 app.use('/api/auth', require('./Routes/user'));
+app.use('/api/medicine', require('./Routes/medicine'));
+app.use('/api/history', require('./Routes/history'));
 
 app.use((req, res) => res.status(404).json({ error: `No API route for ${req.method} ${req.path}` }));
 app.use((error, _req, res, _next) => {
