@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import './nearByHospital.css'
 import TableComp from '../Table/tableComp'
 import axios from '@/api/client'
+import { toast } from 'react-toastify';
 const NearByHospitals = (props) => {
   const hosptalheaders = ["Sn No.", "Name", "Address", "Contact"]
 
@@ -24,7 +25,7 @@ const NearByHospitals = (props) => {
     await axios.get('/api/hospital/get').then(resp => {
       getFormattedData(resp.data.hospitals || [])
     }).catch(err => {
-      console.log(err)
+      toast.error(err?.response?.data?.error || 'Unable to load nearby hospitals')
     }).finally(() => {
       props.hideLoader()
     })

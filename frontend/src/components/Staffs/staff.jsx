@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import './staff.css'
 import TableComp from '../Table/tableComp'
 import axios from '@/api/client'
+import { toast } from 'react-toastify';
 const Staff = (props) => {
   const staffHeader = ["Name", "Designation", "Email Id", "Contact No."]
 
@@ -24,7 +25,7 @@ const Staff = (props) => {
     await axios.get('/api/auth/get-staffs').then(resp => {
       getFormattedData(resp.data.staffs || [])
     }).catch(err => {
-      console.log(err)
+      toast.error(err?.response?.data?.error || 'Unable to load the staff directory')
     }).finally(() => {
       props.hideLoader()
     })

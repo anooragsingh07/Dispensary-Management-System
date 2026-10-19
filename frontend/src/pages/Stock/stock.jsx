@@ -3,6 +3,7 @@ import './stock.css'
 import SearchBox from '../../components/SearchBox/searchBox'
 import TableComp from '../../components/Table/tableComp';
 import axios from '@/api/client'
+import { toast } from 'react-toastify';
 const Stock = (props) => {
     const [medicineName, setMedicineName] = useState("");
     const [stocks, setStocks] = useState([]);
@@ -28,7 +29,7 @@ const Stock = (props) => {
         await request.then(resp => {
             getFormattedData(resp.data.medicines || [])
         }).catch(err => {
-            console.log(err)
+            toast.error(err?.response?.data?.error || 'Unable to load medicine stock')
         }).finally(() => {
             props.hideLoader()
         })
@@ -39,7 +40,7 @@ const Stock = (props) => {
     }, [medicineName])
     return (
         <div className='stock-page'>
-            <SearchBox placeholder="Seach Medicine" value={medicineName} onChange={handleInputChange} />
+            <SearchBox placeholder="Search medicine" value={medicineName} onChange={handleInputChange} />
             <div className='stock-page-card'>
                 <TableComp header={headers} data={stocks} />
             </div>

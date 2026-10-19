@@ -20,7 +20,7 @@ const Report = (props) => {
         await request.then(resp => {
             setData(resp.data.medicines || [])
         }).catch(err => {
-            console.log(err)
+            toast.error(err?.response?.data?.error || 'Unable to load medicine options')
         })
     }
 

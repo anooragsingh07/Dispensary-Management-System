@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './facility.css'
 import axios from '@/api/client';
+import { toast } from 'react-toastify';
 const Facility = (props) => {
 
   const [data, setData] = useState([]);
@@ -10,7 +11,7 @@ const Facility = (props) => {
     await axios.get('/api/facility/get').then(resp => {
       setData(resp.data.facilities || [])
     }).catch(err => {
-      console.log(err)
+      toast.error(err?.response?.data?.error || 'Unable to load dispensary facilities')
     }).finally(() => {
       props.hideLoader()
     })

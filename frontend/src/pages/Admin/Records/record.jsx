@@ -42,8 +42,7 @@ const Record = (props) => {
         await axios.get(`/api/history/get-history?month=${selectedMonth}&year=${selectedYear}`, { withCredentials: true }).then(response => {
             setData(response.data.history)
         }).catch(err => {
-            console.log(err)
-            toast.error(err?.response?.data?.error);
+            toast.error(err?.response?.data?.error || 'Unable to load visit records');
 
         }).finally(() => {
             props.hideLoader()

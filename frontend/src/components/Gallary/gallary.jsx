@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './gallary.css'
 import axios from '@/api/client'
+import { toast } from 'react-toastify';
 const Gallary = (props) => {
 
 
@@ -13,7 +14,7 @@ const Gallary = (props) => {
       await axios.get('/api/gallary/get').then(resp => {
         setData(resp.data.images || [])
       }).catch(err => {
-        console.log(err)
+        toast.error(err?.response?.data?.error || 'Unable to load gallery images')
       }).finally(() => {
         props.hideLoader()
       })
