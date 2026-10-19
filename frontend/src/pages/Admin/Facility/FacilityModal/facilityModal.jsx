@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './facilityModal.css'
 import { ToastContainer, toast } from 'react-toastify';
-import axios from 'axios';
+import axios from '@/api/client';
 const FacilityModal = (props) => {
 
     const [inputField, setInputField] = useState({ title: "", description: "" });
@@ -16,9 +16,9 @@ const FacilityModal = (props) => {
     }, [])
     const updateFacility = async () => {
         props.showLoader();
-        await axios.put(`http://localhost:4000/api/facility/update/${props.clickedItem._id}`, inputField, { withCredentials: true }).then(resp => {
+        await axios.put(`/api/facility/update/${props.clickedItem._id}`, inputField, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
-            window.location.reload()
+            props.onClose()
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to update facility")
         }).finally(() => {
@@ -36,9 +36,9 @@ const FacilityModal = (props) => {
         }
 
         props.showLoader();
-        await axios.post('http://localhost:4000/api/facility/add', inputField, { withCredentials: true }).then(resp => {
+        await axios.post('/api/facility/add', inputField, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
-            window.location.reload()
+            props.onClose()
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to add facility")
         }).finally(() => {

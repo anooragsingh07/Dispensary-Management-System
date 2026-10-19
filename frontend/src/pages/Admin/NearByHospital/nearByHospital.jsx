@@ -6,7 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Modal from '../../../components/Modal/modal';
 import NearByModal from './NearByModal/nearByModal';
-import axios from 'axios';
+import axios from '@/api/client';
 import { ToastContainer, toast } from 'react-toastify';
 const NearByHospital = (props) => {
     const [modal, setModal] = useState(false)
@@ -22,7 +22,7 @@ const NearByHospital = (props) => {
 
     const fetchData = async () => {
         props.showLoader();
-        await axios.get('http://localhost:4000/api/hospital/get').then(resp => {
+        await axios.get('/api/hospital/get').then(resp => {
             setData(resp.data.hospitals || [])
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to fetch hospitals")
@@ -47,7 +47,7 @@ const NearByHospital = (props) => {
 
     const handleDelete = async (id) => {
         props.showLoader();
-        await axios.delete(`http://localhost:4000/api/hospital/delete/${id}`, { withCredentials: true }).then(resp => {
+        await axios.delete(`/api/hospital/delete/${id}`, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             filterOutData(id)
         }).catch(err => {
@@ -92,7 +92,7 @@ const NearByHospital = (props) => {
                     data.length === 0 && <div>No hospitals added yet.</div>
                 }
             </div>
-            {modal && <Modal header={clickedItem ? "Update Hospital" : "Add Hospital"} handleClose={onOFModal} children={<NearByModal clickedItem={clickedItem} showLoader={props.showLoader} hideLoader={props.hideLoader} />} />}
+            {modal && <Modal header={clickedItem ? "Update Hospital" : "Add Hospital"} handleClose={onOFModal} children={<NearByModal clickedItem={clickedItem} onClose={onOFModal} showLoader={props.showLoader} hideLoader={props.hideLoader} />} />}
             <ToastContainer />
         </div>
     )

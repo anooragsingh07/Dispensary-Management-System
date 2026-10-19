@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import './nearByModal.css'
-import axios from 'axios';
+import axios from '@/api/client';
 import { ToastContainer, toast } from 'react-toastify';
 const NearByModal = (props) => {
 
@@ -18,9 +18,9 @@ const NearByModal = (props) => {
 
     const updateFunc = async () => {
         props.showLoader();
-        await axios.put(`http://localhost:4000/api/hospital/update/${props.clickedItem._id}`, inputField, { withCredentials: true }).then(resp => {
+        await axios.put(`/api/hospital/update/${props.clickedItem._id}`, inputField, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
-            window.location.reload()
+            props.onClose()
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to update hospital")
         }).finally(() => {
@@ -38,9 +38,9 @@ const NearByModal = (props) => {
         }
 
         props.showLoader();
-        await axios.post('http://localhost:4000/api/hospital/add', inputField, { withCredentials: true }).then(resp => {
+        await axios.post('/api/hospital/add', inputField, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
-            window.location.reload()
+            props.onClose()
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to add hospital")
         }).finally(() => {

@@ -281,7 +281,7 @@ exports.addStaffsByAdmin = async (req, res) => {
 
 exports.getAllStaffs = async (_req, res) => {
     try {
-        const staffs = await User.find({ role: 'staff' }).select('name designation').sort({ name: 1 });
+        const staffs = await User.find({ role: 'staff' }).select('name designation email mobileNo').sort({ name: 1 });
         return res.status(200).json({ staffs });
     } catch (error) {
         console.error('Staff list failed:', error);

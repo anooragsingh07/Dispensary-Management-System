@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './manageEvent.css'
 import DeleteIcon from '@mui/icons-material/Delete';
-import axios from 'axios';
+import axios from '@/api/client';
 import { ToastContainer, toast } from 'react-toastify';
 
 const ManageEvent = (props) => {
@@ -10,7 +10,7 @@ const ManageEvent = (props) => {
 
     const fetchData = async () => {
         props.showLoader();
-        await axios.get('http://localhost:4000/api/notification/get').then(resp => {
+        await axios.get('/api/notification/get').then(resp => {
             setData(resp.data.notifications || [])
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to fetch events")
@@ -27,7 +27,7 @@ const ManageEvent = (props) => {
         e.preventDefault();
         if (title.trim().length === 0) return toast.error("Please Enter Title");
         props.showLoader();
-        await axios.post('http://localhost:4000/api/notification/add', { title }, { withCredentials: true }).then(resp => {
+        await axios.post('/api/notification/add', { title }, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             setData([resp.data.notification, ...data])
             setTitle("")
@@ -44,7 +44,7 @@ const ManageEvent = (props) => {
 
     const handleDeleteEvent = async (id) => {
         props.showLoader();
-        await axios.delete(`http://localhost:4000/api/notification/delete/${id}`, { withCredentials: true }).then(resp => {
+        await axios.delete(`/api/notification/delete/${id}`, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             filterOutEvent(id)
         }).catch(err => {

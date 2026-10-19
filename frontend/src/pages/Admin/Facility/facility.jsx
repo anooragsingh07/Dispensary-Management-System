@@ -6,7 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Modal from '../../../components/Modal/modal';
 import FacilityModal from './FacilityModal/facilityModal';
-import axios from 'axios';
+import axios from '@/api/client';
 import { ToastContainer, toast } from 'react-toastify';
 const Facility = (props) => {
     const [modal, setModal] = useState(false)
@@ -23,7 +23,7 @@ const Facility = (props) => {
 
     const fetchData = async () => {
         props.showLoader();
-        await axios.get('http://localhost:4000/api/facility/get').then(resp => {
+        await axios.get('/api/facility/get').then(resp => {
             setData(resp.data.facilities || [])
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to fetch facilities")
@@ -48,7 +48,7 @@ const Facility = (props) => {
     }
     const handlDelete = async (id) => {
         props.showLoader()
-        await axios.delete(`http://localhost:4000/api/facility/delete/${id}`, { withCredentials: true }).then(resp => {
+        await axios.delete(`/api/facility/delete/${id}`, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             filterOutData(id)
         }).catch(err => {
@@ -89,7 +89,7 @@ const Facility = (props) => {
                     data.length === 0 && <div>No facilities added yet.</div>
                 }
             </div>
-            {modal && <Modal header={clickedItem ? "Update Facility" : "Add Facility"} handleClose={onOFModal} children={<FacilityModal clickedItem={clickedItem} showLoader={props.showLoader} hideLoader={props.hideLoader} />} />}
+            {modal && <Modal header={clickedItem ? "Update Facility" : "Add Facility"} handleClose={onOFModal} children={<FacilityModal clickedItem={clickedItem} onClose={onOFModal} showLoader={props.showLoader} hideLoader={props.hideLoader} />} />}
             <ToastContainer />
         </div>
     )

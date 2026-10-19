@@ -28,6 +28,10 @@ app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok' }));
 app.use('/api/auth', require('./Routes/user'));
 app.use('/api/medicine', require('./Routes/medicine'));
 app.use('/api/history', require('./Routes/history'));
+app.use('/api/facility', require('./Routes/facility'));
+app.use('/api/hospital', require('./Routes/nearByHospital'));
+app.use('/api/notification', require('./Routes/notification'));
+app.use('/api/gallary', require('./Routes/gallary'));
 
 app.use((req, res) => res.status(404).json({ error: `No API route for ${req.method} ${req.path}` }));
 app.use((error, _req, res, _next) => {

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddModal from './AddModal/addModal';
 import DeleteModal from './DeleteModal/deleteModal';
-import axios from 'axios';
+import axios from '@/api/client';
 import { ToastContainer, toast } from 'react-toastify';
 const AdminGallary = (props) => {
 
@@ -18,7 +18,6 @@ const AdminGallary = (props) => {
     const setDeleteModalFunc = (item = null) => {
         if (deleteModal) {
             setClickedItem(null)
-            fetchData()
         } else {
             setClickedItem(item)
         }
@@ -26,9 +25,20 @@ const AdminGallary = (props) => {
         setDeleteModal(prev => !prev)
     }
 
+    const handleImageAdded = (image) => {
+        setData((current) => [image, ...current]);
+        setAddModal(false);
+    };
+
+    const handleImageDeleted = (id) => {
+        setData((current) => current.filter((image) => image._id !== id));
+        setDeleteModal(false);
+        setClickedItem(null);
+    };
+
     const fetchData = async () => {
         props.showLoader();
-        await axios.get('http://localhost:4000/api/gallary/get').then(resp => {
+        await axios.get('/api/gallary/get').then(resp => {
             setData(resp.data.images || [])
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to fetch gallery")
@@ -62,8 +72,8 @@ const AdminGallary = (props) => {
                     data.length === 0 && <div>No gallery images added yet.</div>
                 }
             </div>
-            {addModal && <AddModal onClose={setAddModalFunc} />}
-            {deleteModal && <DeleteModal clickedItem={clickedItem} onClose={setDeleteModalFunc} />}
+            {addModal && <AddModal onClose={() => setAddModal(false)} onAdded={handleImageAdded} />}
+            {deleteModal && <DeleteModal clickedItem={clickedItem} onClose={() => setDeleteModalFunc()} onDeleted={handleImageDeleted} />}
             <ToastContainer />
         </div>
     )
