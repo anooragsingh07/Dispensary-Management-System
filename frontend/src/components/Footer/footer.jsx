@@ -26,7 +26,7 @@ Mohali, Punjab 140307</div>
                 <a href='https://www.cgc.edu.in/college-rules-regulations'>College Rules & Regulations</a>
                 <a href='https://www.cgc.edu.in/internal-complaint-committee'>Internal Complaint Committee
 </a>
-                <a href='https://www.cgc.edu.in/student-grievance-redressal-committee' target='_blank' target='_blank'>Grievance Cell</a>
+                <a href='https://www.cgc.edu.in/student-grievance-redressal-committee' target='_blank' rel='noreferrer'>Grievance Cell</a>
                 
                 <a href='https://www.cgc.edu.in/'>College Official Website</a>
                 <a href='https://www.cgc.edu.in/contact-us'>Contact Us</a>
