@@ -50,13 +50,15 @@ const RegisterStudent = (props) => {
     const handleSearch = async () => {
         const roll = searchStudent.trim();
         if (!roll) return toast.error('Enter a roll number to search');
-        setCreatedStudentAccount(null);
         props.showLoader();
         try {
             const { data } = await axios.get(`/api/auth/get-student/${encodeURIComponent(roll)}`);
-            setStudentDetail({ ...emptyStudent, ...data.student });
+            const loadedStudent = { ...emptyStudent, ...data.student };
+            setStudentDetail(loadedStudent);
+            setCreatedStudentAccount((current) => current?.studentId === loadedStudent._id ? current : null);
             toast.success('Student profile loaded');
         } catch (error) {
+            setCreatedStudentAccount(null);
             setStudentDetail({ ...emptyStudent, roll: searchStudent });
             setConsultations([]);
             toast.error(error?.response?.data?.error || 'No student found');
@@ -148,6 +150,14 @@ const RegisterStudent = (props) => {
                 </div>
             </div>
             <p className="student-credentials-note">Share or save this password now. It won’t be shown again after you search for another student or leave this page.</p>
+        </section>}
+
+        {studentDetail._id && !(createdStudentAccount?.password && studentDetail._id === createdStudentAccount.studentId) && <section className="student-credentials-card student-password-unavailable" aria-live="polite">
+            <div className="student-credentials-heading">
+                <div><p className="eyebrow">STUDENT SIGN-IN</p><h2>Password not available</h2></div>
+                <span>Stored securely</span>
+            </div>
+            <p className="student-credentials-note">Passwords are stored as one-way hashes, so an existing password cannot be viewed here. A new student’s temporary password is shown immediately after registration.</p>
         </section>}
 
         {studentDetail._id && <section className="student-consultation-history">
