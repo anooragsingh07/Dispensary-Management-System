@@ -128,7 +128,7 @@ exports.createConsultation = async (req, res) => {
     try {
         const body = req.body || {};
         if (!mongoose.isValidObjectId(body.studentId)) return res.status(400).json({ error: 'Choose a valid student' });
-        const student = await Student.findOne({ _id: body.studentId, deletedAt: null }).select('_id');
+        const student = await Student.findById(body.studentId).select('_id');
         if (!student) return res.status(404).json({ error: 'Student not found' });
         const clinical = validateConsultation(body);
         if (clinical.error) return res.status(400).json({ error: clinical.error });
@@ -162,7 +162,7 @@ exports.createConsultation = async (req, res) => {
 exports.getStudentConsultations = async (req, res) => {
     try {
         if (!mongoose.isValidObjectId(req.params.studentId)) return res.status(400).json({ error: 'Enter a valid student ID' });
-        const student = await Student.findOne({ _id: req.params.studentId, deletedAt: null }).select('_id');
+        const student = await Student.findById(req.params.studentId).select('_id');
         if (!student) return res.status(404).json({ error: 'Student not found' });
         const consultations = await Consultation.find({ studentId: student._id }).select('+clinicalNotes').populate(consultationPopulate).sort({ visitAt: -1 }).lean();
         const ids = consultations.map((visit) => visit._id);

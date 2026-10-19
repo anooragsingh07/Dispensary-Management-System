@@ -56,18 +56,7 @@
     display: flex;
     gap: 20px;
     width: 90%;
-    flex-wrap: wrap;
 }
-.delete-student-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid #b42318 !important; background: #fff !important; color: #b42318 !important; }
-.delete-student-button:hover { background: #fff1f0 !important; }
-.delete-student-confirm { display: grid; gap: 12px; color: var(--ink); }
-.delete-student-confirm p { margin: 0; line-height: 1.55; }
-.delete-student-confirm p + p { color: var(--muted); font-size: 13px; }
-.delete-student-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
-.delete-student-cancel, .delete-student-confirm-button { padding: 10px 16px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; }
-.delete-student-confirm-button { border-color: #b42318; background: #b42318; color: white; }
-.delete-student-confirm-button:hover { border-color: #8f1d15; background: #8f1d15; }
-.delete-student-cancel:disabled, .delete-student-confirm-button:disabled { cursor: not-allowed; opacity: .65; }
 .student-credentials-card { margin-top: 20px; padding: 20px 22px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
 .student-credentials-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
 .student-credentials-heading .eyebrow { margin: 0 0 5px; color: var(--muted); font-size: 10px; letter-spacing: .08em; }

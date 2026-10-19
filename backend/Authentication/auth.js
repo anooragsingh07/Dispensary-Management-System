@@ -19,7 +19,6 @@ exports.authenticate = async (req, res, next) => {
         const decoded = jwt.verify(token, getJwtSecret());
         const user = await UserModel.findById(decoded.userId).select('-password').populate('studentId');
         if (!user) return res.status(401).json({ error: 'Your account could not be found' });
-        if (user.isActive === false) return res.status(401).json({ error: 'This account is no longer active' });
         if ((decoded.authVersion || 0) !== (user.authVersion || 0)) return res.status(401).json({ error: 'Your session has expired. Please sign in again.' });
 
         req.user = user;

@@ -4,7 +4,6 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
 import RemoveRedEyeOutlinedIcon from '@mui/icons-material/RemoveRedEyeOutlined';
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { Link } from 'react-router-dom';
 import SearchBox from '../../../components/SearchBox/searchBox';
 import Modal from '../../../components/Modal/modal';
@@ -20,8 +19,6 @@ const RegisterStudent = (props) => {
     const [searchStudent, setSearchStudent] = useState('');
     const [reportModal, setReportModal] = useState(false);
     const [selectedConsultation, setSelectedConsultation] = useState(null);
-    const [deleteStudentModal, setDeleteStudentModal] = useState(false);
-    const [deletingStudent, setDeletingStudent] = useState(false);
     const [studentDetail, setStudentDetail] = useState(emptyStudent);
     const [createdStudentAccount, setCreatedStudentAccount] = useState(null);
     const [consultations, setConsultations] = useState([]);
@@ -105,26 +102,6 @@ const RegisterStudent = (props) => {
         }
     };
 
-    const deleteStudent = async () => {
-        if (!studentDetail._id || deletingStudent) return;
-        setDeletingStudent(true);
-        props.showLoader();
-        try {
-            const { data } = await axios.delete(`/api/auth/delete-student/${studentDetail._id}`);
-            toast.success(data.message || 'Student deleted');
-            setDeleteStudentModal(false);
-            setStudentDetail(emptyStudent);
-            setSearchStudent('');
-            setCreatedStudentAccount(null);
-            setConsultations([]);
-        } catch (error) {
-            toast.error(error?.response?.data?.error || 'Unable to delete this student');
-        } finally {
-            setDeletingStudent(false);
-            props.hideLoader();
-        }
-    };
-
     const handleConsultationSaved = async () => {
         closeConsultationForm();
         await fetchConsultations(studentDetail._id);
@@ -153,7 +130,6 @@ const RegisterStudent = (props) => {
                 <div className="block-divs">
                     <button type="submit" className="form-btn reg-btn">{studentDetail._id ? 'Update student' : 'Register student'}</button>
                     {studentDetail._id && <button type="button" className="button-primary reg-btn" onClick={openConsultationForm}>New consultation</button>}
-                    {studentDetail._id && <button type="button" className="button-primary reg-btn delete-student-button" onClick={() => setDeleteStudentModal(true)}><DeleteOutlineOutlinedIcon fontSize="small" /> Delete student</button>}
                 </div>
             </form>
         </section>
@@ -196,16 +172,6 @@ const RegisterStudent = (props) => {
 
         {reportModal && <Modal header="New consultation" handleClose={closeConsultationForm}><ConsultationForm studentDetail={studentDetail} showLoader={props.showLoader} hideLoader={props.hideLoader} onCancel={closeConsultationForm} onSaved={handleConsultationSaved} /></Modal>}
         {selectedConsultation && <Modal header="Consultation details" handleClose={() => setSelectedConsultation(null)}><ConsultationDetails consultation={selectedConsultation} includePrivate /></Modal>}
-        {deleteStudentModal && studentDetail._id && <Modal header="Delete student?" handleClose={() => !deletingStudent && setDeleteStudentModal(false)}>
-            <div className="delete-student-confirm">
-                <p>Delete <strong>{studentDetail.name}</strong> (roll number <strong>{studentDetail.roll}</strong>)?</p>
-                <p>The student account will be deactivated and the profile archived. Consultation history, prescriptions and audit records will be retained.</p>
-                <div className="delete-student-actions">
-                    <button type="button" className="delete-student-cancel" onClick={() => setDeleteStudentModal(false)} disabled={deletingStudent}>Cancel</button>
-                    <button type="button" className="delete-student-confirm-button" onClick={deleteStudent} disabled={deletingStudent}>{deletingStudent ? 'Deleting…' : 'Delete student'}</button>
-                </div>
-            </div>
-        </Modal>}
         <ToastContainer />
     </main>;
 };
