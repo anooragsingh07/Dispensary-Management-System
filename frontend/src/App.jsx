@@ -33,14 +33,10 @@ function App() {
       .then(({ data }) => {
         if (!active) return;
         setUser(data.user);
-        localStorage.setItem('userInfo', JSON.stringify(data.user));
-        localStorage.setItem('isLogin', 'true');
       })
       .catch(() => {
         if (!active) return;
         setUser(null);
-        localStorage.removeItem('userInfo');
-        localStorage.removeItem('isLogin');
       })
       .finally(() => {
         if (active) setCheckingSession(false);
@@ -50,13 +46,6 @@ function App() {
 
   const handleLogin = (account) => {
     setUser(account || null);
-    if (account) {
-      localStorage.setItem('userInfo', JSON.stringify(account));
-      localStorage.setItem('isLogin', 'true');
-    } else {
-      localStorage.removeItem('userInfo');
-      localStorage.removeItem('isLogin');
-    }
   };
 
   const showLoader = () => setLoader(true);
