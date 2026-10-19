@@ -48,7 +48,9 @@ const RegisterStudent = (props) => {
     const handleUpdateFunc = async () => {
         if (studentDetail.name.trim().length === 0 || studentDetail.email.trim().length === 0 || studentDetail.roll.trim().length === 0 || studentDetail.mobileNo.trim().length === 0) return toast.error("Name, Mobile No and Roll cant be empty");
         props.showLoader();
-        const { _id, updatedAt, createdAt, __v, role, ...student } = { ...studentDetail };
+        const { _id } = studentDetail;
+        const editableFields = ['name', 'email', 'roll', 'mobileNo', 'fatherName', 'fatherMobile', 'address', 'previous_health', 'age', 'bloodGroup'];
+        const student = Object.fromEntries(editableFields.map((field) => [field, studentDetail[field]]));
         await axios.put(`/api/auth/update-student/${_id}`, student, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             setStudentDetail({ ...emptyStudent, ...resp.data.student })
