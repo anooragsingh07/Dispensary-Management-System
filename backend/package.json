@@ -9,7 +9,10 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "seed:admin": "node scripts/seedAdmin.js"
+    "seed:admin": "node scripts/seedAdmin.js",
+    "seed:demo": "node scripts/seedDemoData.js",
+    "db:migrate:medical": "node scripts/migrateMedicalRecords.js",
+    "test": "node --test"
   },
   "author": "",
   "license": "ISC",

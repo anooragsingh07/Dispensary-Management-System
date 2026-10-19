@@ -26,6 +26,9 @@ exports.addHistory = async (req, res) => {
         if (!body.student || !mongoose.isValidObjectId(body.student) || !Array.isArray(body.medicines) || body.medicines.length === 0 || body.medicines.length > 30) {
             return res.status(400).json({ error: 'Choose a student and at least one medicine' });
         }
+        if (body.symptoms !== undefined && (typeof body.symptoms !== 'string' || body.symptoms.length > 1000)) {
+            return res.status(400).json({ error: 'Symptoms must be text with at most 1000 characters' });
+        }
 
         const student = await User.findOne({ _id: body.student, role: 'student' }).select('_id roll');
         if (!student) return res.status(404).json({ error: 'Student not found' });
@@ -35,14 +38,22 @@ exports.addHistory = async (req, res) => {
             if (!item?._id || !mongoose.isValidObjectId(item._id) || !numericQuantity(item.requiredQuantity)) {
                 return res.status(400).json({ error: 'Each medicine needs a valid whole-number quantity greater than zero' });
             }
+            if (item.dosage !== undefined && (typeof item.dosage !== 'string' || item.dosage.length > 200)) {
+                return res.status(400).json({ error: 'Dosage instructions must be text with at most 200 characters' });
+            }
             const id = String(item._id);
-            const quantity = (requested.get(id) || 0) + Number(item.requiredQuantity);
+            const existing = requested.get(id);
+            const quantity = (existing?.quantity || 0) + Number(item.requiredQuantity);
             if (!Number.isSafeInteger(quantity) || quantity > 1000000) return res.status(400).json({ error: 'Requested medicine quantity is too large' });
-            requested.set(id, quantity);
+            const dosage = String(item.dosage || '').trim();
+            if (existing?.dosage && dosage && existing.dosage !== dosage) {
+                return res.status(400).json({ error: 'Use one dosage instruction per medicine' });
+            }
+            requested.set(id, { quantity, dosage: dosage || existing?.dosage || '' });
         }
 
         const dispensedMedicines = [];
-        for (const [medicineId, quantity] of requested) {
+        for (const [medicineId, { quantity, dosage }] of requested) {
             const medicine = await Medicine.findOneAndUpdate(
                 { _id: medicineId, $expr: { $gte: [quantityInStock, quantity] } },
                 [{ $set: { quantity: { $subtract: [quantityInStock, quantity] } } }],
@@ -57,12 +68,13 @@ exports.addHistory = async (req, res) => {
             }
 
             reserved.push({ medicineId, quantity });
-            dispensedMedicines.push({ name: medicine.name, requiredQuantity: quantity });
+            dispensedMedicines.push({ name: medicine.name, requiredQuantity: quantity, dosage });
         }
 
         const history = await History.create({
             roll: student.roll,
             student: student._id,
+            symptoms: String(body.symptoms || '').trim(),
             medicines: dispensedMedicines,
         });
         return res.status(201).json({ message: 'Visit record saved and medicine stock updated', history });

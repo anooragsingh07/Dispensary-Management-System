@@ -1,24 +1,17 @@
 const mongoose = require('mongoose');
 
-const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true, trim: true, maxlength: 120 },
-    role: { type: String, enum: ['admin', 'staff', 'student'], default: 'student', required: true },
+const userSchema = new mongoose.Schema({
+    // Student profile data lives in students; staff/admin display names live here.
+    name: { type: String, trim: true, maxlength: 120 },
+    role: { type: String, enum: ['admin', 'doctor', 'staff', 'student'], default: 'student', required: true },
     authVersion: { type: Number, default: 0 },
+    // Email is the authentication identifier. Student profile data is linked by studentId.
     email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
     password: { type: String, required: true, select: false },
-    roll: { type: String, trim: true, sparse: true, unique: true },
-    mobileNo: { type: String, default: '', trim: true },
-    fatherName: { type: String, default: '', trim: true },
-    fatherMobile: { type: String, default: '', trim: true },
-    address: { type: String, default: '', trim: true },
-    previous_health: { type: String, default: '', trim: true },
-    age: { type: Number, min: 0, max: 130 },
-    bloodGroup: { type: String, default: '', trim: true },
-    designation: { type: String, default: '', trim: true },
-    resetPasswordTokenHash: { type: String, select: false },
-    resetPasswordExpires: { type: Date, select: false },
-    resetPasswordAttempts: { type: Number, default: 0, select: false },
-    passwordResetTokenHash: { type: String, select: false },
-}, { timestamps: true });
+    studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'student' },
+    designation: { type: String, default: '', trim: true, maxlength: 120 },
+    mobileNo: { type: String, default: '', trim: true, maxlength: 24 },
+}, { timestamps: true, collection: 'users' });
 
-module.exports = mongoose.model('user', UserSchema);
+userSchema.index({ studentId: 1 }, { unique: true, sparse: true });
+module.exports = mongoose.model('user', userSchema);

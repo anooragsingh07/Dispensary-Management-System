@@ -1,12 +1,11 @@
 const User = require('../Models/user');
+const Student = require('../Models/student');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { getJwtSecret } = require('../Authentication/auth');
 
 const SESSION_LENGTH_MS = 7 * 24 * 60 * 60 * 1000;
-const PASSWORD_RESET_LENGTH_MS = 10 * 60 * 1000;
-const MAX_OTP_ATTEMPTS = 5;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const transporter = nodemailer.createTransport({
@@ -22,17 +21,79 @@ const cookieOptions = () => ({
 });
 
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+const normalizeRoll = (roll) => String(roll || '').trim().toUpperCase();
 const isEmail = (email) => EMAIL_PATTERN.test(email);
-const hashSecret = (value) => crypto.createHash('sha256').update(value).digest('hex');
+const isPhone = (phone) => {
+    const value = String(phone || '').trim();
+    const digits = value.replace(/\D/g, '').length;
+    return /^\+?[0-9][0-9\s().-]{5,22}$/.test(value) && digits >= 7 && digits <= 15;
+};
+
+const studentFields = ['name', 'roll', 'mobileNo', 'fatherName', 'fatherMobile', 'address', 'previous_health', 'age', 'bloodGroup'];
+const allowedBloodGroups = new Set(['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
+
+const normalizeStudentFields = (body, current = {}, { requireMobile = true } = {}) => {
+    const data = Object.fromEntries(studentFields
+        .filter((field) => Object.prototype.hasOwnProperty.call(current, field))
+        .map((field) => [field, current[field]]));
+    for (const field of studentFields) {
+        if (!Object.prototype.hasOwnProperty.call(body, field)) continue;
+        const value = body[field];
+        data[field] = field === 'roll'
+            ? normalizeRoll(value)
+            : field === 'age'
+                ? (String(value ?? '').trim() ? Number(value) : undefined)
+                : String(value ?? '').trim();
+    }
+    if (!data.name || data.name.length > 120) return { error: 'Enter a student name of 1 to 120 characters' };
+    if (!data.roll || data.roll.length > 50) return { error: 'Enter a roll number of 1 to 50 characters' };
+    if (requireMobile && !data.mobileNo) return { error: 'Student mobile number is required' };
+    if (data.mobileNo && (data.mobileNo.length > 24 || !isPhone(data.mobileNo))) return { error: 'Enter a valid student mobile number' };
+    if (data.fatherName?.length > 120) return { error: 'Guardian name must be 120 characters or fewer' };
+    if (data.fatherMobile && (data.fatherMobile.length > 24 || !isPhone(data.fatherMobile))) return { error: 'Enter a valid guardian mobile number' };
+    if (data.address?.length > 500) return { error: 'Address must be 500 characters or fewer' };
+    if (data.previous_health?.length > 2000) return { error: 'Previous health details must be 2000 characters or fewer' };
+    if (data.age !== undefined && (!Number.isInteger(data.age) || data.age < 1 || data.age > 130)) return { error: 'Age must be a whole number from 1 to 130' };
+    if (data.bloodGroup && !allowedBloodGroups.has(data.bloodGroup.toUpperCase())) return { error: 'Choose a valid blood group' };
+    if (data.bloodGroup) data.bloodGroup = data.bloodGroup.toUpperCase();
+    return { data };
+};
 
 const sanitizeUser = (user) => {
     const plainUser = user.toObject ? user.toObject() : { ...user };
     delete plainUser.password;
-    delete plainUser.resetPasswordTokenHash;
-    delete plainUser.resetPasswordExpires;
-    delete plainUser.resetPasswordAttempts;
-    delete plainUser.passwordResetTokenHash;
+    const profile = plainUser.studentId && typeof plainUser.studentId === 'object'
+        ? plainUser.studentId
+        : null;
+    if (plainUser.role === 'student' && profile) {
+        plainUser.studentId = profile._id;
+        for (const field of studentFields) {
+            plainUser[field] = profile[field] ?? '';
+        }
+    }
     return plainUser;
+};
+
+const studentResponse = (student, user) => ({
+    ...(student.toObject ? student.toObject() : student),
+    email: user?.email || '',
+    userId: user?._id || null,
+});
+
+const createStudentAccount = async ({ profile, email, password }) => {
+    const student = await Student.create(profile);
+    try {
+        const user = await User.create({
+            email,
+            password: await bcrypt.hash(password, 12),
+            role: 'student',
+            studentId: student._id,
+        });
+        return { student, user };
+    } catch (error) {
+        await Student.deleteOne({ _id: student._id }).catch(() => {});
+        throw error;
+    }
 };
 
 const setAuthCookie = (res, user) => {
@@ -53,19 +114,25 @@ exports.register = async (req, res) => {
         const name = String(req.body.name || '').trim();
         const email = normalizeEmail(req.body.email);
         const password = String(req.body.password || '');
-        const roll = String(req.body.roll || '').trim();
+        const roll = normalizeRoll(req.body.roll);
 
         if (!name || !email || !password || !roll) return res.status(400).json({ error: 'Name, email, password and roll number are required' });
         if (name.length > 120 || !isEmail(email) || password.length < 8 || password.length > 128 || roll.length > 50) {
             return res.status(400).json({ error: 'Enter a valid name, email, roll number and a password of at least 8 characters' });
         }
 
-        const existingAccount = await User.findOne({ $or: [{ email }, { roll }] });
-        if (existingAccount) return res.status(409).json({ error: 'An account already exists with that email or roll number' });
+        const normalized = normalizeStudentFields({ ...req.body, name, roll }, {}, { requireMobile: false });
+        if (normalized.error) return res.status(400).json({ error: normalized.error });
+        if (await User.exists({ email }) || await Student.exists({ roll })) {
+            return res.status(409).json({ error: 'An account already exists with that email or roll number' });
+        }
 
-        const user = await User.create({ name, email, roll, password: await bcrypt.hash(password, 12), role: 'student' });
+        const { user, student } = await createStudentAccount({ profile: normalized.data, email, password });
         setAuthCookie(res, user);
-        return res.status(201).json({ message: 'Your student account is ready', user: sanitizeUser(user) });
+        return res.status(201).json({
+            message: 'Your student account is ready',
+            user: sanitizeUser({ ...user.toObject(), studentId: student.toObject() }),
+        });
     } catch (error) {
         if (error.code === 11000) return res.status(409).json({ error: 'An account already exists with that email or roll number' });
         console.error('Student registration failed:', error);
@@ -79,7 +146,7 @@ exports.login = async (req, res) => {
         const password = String(req.body.password || '');
         if (!email || !password || !isEmail(email)) return invalidCredentials(res);
 
-        const user = await User.findOne({ email }).select('+password');
+        const user = await User.findOne({ email }).select('+password').populate('studentId');
         if (!user || !(await bcrypt.compare(password, user.password))) return invalidCredentials(res);
 
         setAuthCookie(res, user);
@@ -92,123 +159,32 @@ exports.login = async (req, res) => {
 
 exports.getCurrentUser = (req, res) => res.status(200).json({ user: sanitizeUser(req.user) });
 
-exports.sendOtp = async (req, res) => {
-    try {
-        const email = normalizeEmail(req.body.email);
-        if (!isEmail(email)) return res.status(400).json({ error: 'Enter a valid email address' });
-
-        if (!isMailConfigured() && process.env.NODE_ENV === 'production') {
-            return res.status(503).json({ error: 'Password recovery is not configured yet' });
-        }
-
-        const user = await User.findOne({ email }).select('+resetPasswordTokenHash +resetPasswordExpires +resetPasswordAttempts');
-        if (!user) return res.status(200).json({ message: 'If the account exists, a reset code will be sent shortly' });
-
-        const otp = crypto.randomInt(100000, 1000000).toString();
-        user.resetPasswordTokenHash = hashSecret(otp);
-        user.resetPasswordExpires = new Date(Date.now() + PASSWORD_RESET_LENGTH_MS);
-        user.resetPasswordAttempts = 0;
-        user.passwordResetTokenHash = undefined;
-        await user.save();
-
-        if (isMailConfigured()) {
-            await sendMail({
-                to: email,
-                subject: 'Dispensary account password reset',
-                text: `Your password reset code is ${otp}. It expires in 10 minutes.`,
-            });
-            return res.status(200).json({ message: 'If the account exists, a reset code will be sent shortly' });
-        }
-
-        return res.status(200).json({ message: 'Development reset code created', devOtp: otp });
-    } catch (error) {
-        console.error('Password reset email failed:', error);
-        return res.status(500).json({ error: 'Unable to start password recovery right now' });
-    }
-};
-
-exports.verifyOtp = async (req, res) => {
-    try {
-        const email = normalizeEmail(req.body.email);
-        const otp = String(req.body.otp || '').trim();
-        if (!isEmail(email) || !/^\d{6}$/.test(otp)) return res.status(400).json({ error: 'Enter a valid email address and six-digit code' });
-
-        const user = await User.findOne({ email }).select('+resetPasswordTokenHash +resetPasswordExpires +resetPasswordAttempts +passwordResetTokenHash');
-        if (!user || !user.resetPasswordExpires || user.resetPasswordExpires <= new Date() || user.resetPasswordAttempts >= MAX_OTP_ATTEMPTS) {
-            return res.status(400).json({ error: 'That code is invalid or has expired. Request a new code.' });
-        }
-
-        if (user.resetPasswordTokenHash !== hashSecret(otp)) {
-            user.resetPasswordAttempts += 1;
-            if (user.resetPasswordAttempts >= MAX_OTP_ATTEMPTS) {
-                user.resetPasswordTokenHash = undefined;
-                user.resetPasswordExpires = undefined;
-            }
-            await user.save();
-            return res.status(400).json({ error: 'That code is invalid or has expired. Request a new code.' });
-        }
-
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        user.resetPasswordTokenHash = undefined;
-        user.passwordResetTokenHash = hashSecret(resetToken);
-        user.resetPasswordAttempts = 0;
-        await user.save();
-        return res.status(200).json({ message: 'Code verified', resetToken });
-    } catch (error) {
-        console.error('Password reset code verification failed:', error);
-        return res.status(500).json({ error: 'Unable to verify the code right now' });
-    }
-};
-
-exports.resetPassword = async (req, res) => {
-    try {
-        const email = normalizeEmail(req.body.email);
-        const newPassword = String(req.body.newPassword || '');
-        const resetToken = String(req.body.resetToken || '');
-        if (!isEmail(email) || newPassword.length < 8 || newPassword.length > 128 || !resetToken) {
-            return res.status(400).json({ error: 'A verified reset code and a password of at least 8 characters are required' });
-        }
-
-        const user = await User.findOne({ email }).select('+passwordResetTokenHash +resetPasswordExpires');
-        if (!user || !user.passwordResetTokenHash || !user.resetPasswordExpires || user.resetPasswordExpires <= new Date() || user.passwordResetTokenHash !== hashSecret(resetToken)) {
-            return res.status(400).json({ error: 'Your verified reset code is invalid or has expired. Start again.' });
-        }
-
-        user.password = await bcrypt.hash(newPassword, 12);
-        user.authVersion = (user.authVersion || 0) + 1;
-        user.passwordResetTokenHash = undefined;
-        user.resetPasswordTokenHash = undefined;
-        user.resetPasswordExpires = undefined;
-        user.resetPasswordAttempts = 0;
-        await user.save();
-        return res.status(200).json({ message: 'Password updated. Please sign in with your new password.' });
-    } catch (error) {
-        console.error('Password update failed:', error);
-        return res.status(500).json({ error: 'Unable to update your password right now' });
-    }
-};
-
 exports.updateStudentById = async (req, res) => {
     try {
-        const student = await User.findById(req.params.id);
-        if (!student || student.role !== 'student') return res.status(404).json({ error: 'Student not found' });
+        const student = await Student.findById(req.params.id);
+        if (!student) return res.status(404).json({ error: 'Student not found' });
+        const user = await User.findOne({ studentId: student._id });
+        if (!user) return res.status(404).json({ error: 'Student login account not found' });
 
-        const editableFields = ['name', 'email', 'roll', 'mobileNo', 'fatherName', 'fatherMobile', 'address', 'previous_health', 'age', 'bloodGroup'];
-        for (const field of editableFields) {
-            if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-                if (field === 'email') student[field] = normalizeEmail(req.body[field]);
-                else if (field === 'age' && String(req.body[field]).trim() === '') student[field] = undefined;
-                else student[field] = req.body[field];
-            }
-        }
-        if (!student.name || !isEmail(student.email) || !student.roll || String(student.roll).length > 50) {
-            return res.status(400).json({ error: 'Student name, valid email and roll number are required' });
-        }
-        const duplicate = await User.findOne({ _id: { $ne: student._id }, $or: [{ email: student.email }, { roll: student.roll }] });
-        if (duplicate) return res.status(409).json({ error: 'That email or roll number belongs to another account' });
+        const email = Object.prototype.hasOwnProperty.call(req.body, 'email') ? normalizeEmail(req.body.email) : user.email;
+        if (!isEmail(email)) return res.status(400).json({ error: 'Enter a valid student email address' });
+        const profileResult = normalizeStudentFields(req.body, student.toObject());
+        if (profileResult.error) return res.status(400).json({ error: profileResult.error });
+        if (await User.exists({ _id: { $ne: user._id }, email })) return res.status(409).json({ error: 'That email belongs to another account' });
+        if (await Student.exists({ _id: { $ne: student._id }, roll: profileResult.data.roll })) return res.status(409).json({ error: 'That roll number belongs to another student' });
 
-        await student.save();
-        return res.status(200).json({ message: 'Student details updated', student: sanitizeUser(student) });
+        const previousEmail = user.email;
+        user.email = email;
+        await user.save();
+        try {
+            Object.assign(student, profileResult.data);
+            await student.save();
+        } catch (error) {
+            user.email = previousEmail;
+            await user.save().catch(() => {});
+            throw error;
+        }
+        return res.status(200).json({ message: 'Student details updated', student: studentResponse(student, user) });
     } catch (error) {
         if (error.code === 11000) return res.status(409).json({ error: 'That email or roll number belongs to another account' });
         console.error('Student update failed:', error);
@@ -218,10 +194,12 @@ exports.updateStudentById = async (req, res) => {
 
 exports.getStudentByRollNo = async (req, res) => {
     try {
-        const roll = String(req.params.roll || '').trim();
-        const student = await User.findOne({ roll, role: 'student' });
+        const roll = normalizeRoll(req.params.roll);
+        const student = await Student.findOne({ roll });
         if (!student) return res.status(404).json({ error: 'Student not found' });
-        return res.status(200).json({ student: sanitizeUser(student) });
+        const user = await User.findOne({ studentId: student._id }).select('email');
+        if (!user) return res.status(404).json({ error: 'Student login account not found' });
+        return res.status(200).json({ student: studentResponse(student, user) });
     } catch (error) {
         console.error('Student lookup failed:', error);
         return res.status(500).json({ error: 'Unable to find that student right now' });
@@ -230,28 +208,27 @@ exports.getStudentByRollNo = async (req, res) => {
 
 exports.registerStudentByStaff = async (req, res) => {
     try {
-        const name = String(req.body.name || '').trim();
         const email = normalizeEmail(req.body.email);
-        const roll = String(req.body.roll || '').trim();
-        const mobileNo = String(req.body.mobileNo || '').trim();
-        if (!name || !isEmail(email) || !roll || !mobileNo) return res.status(400).json({ error: 'Student name, valid email, roll number and mobile number are required' });
-        if (await User.exists({ $or: [{ email }, { roll }] })) return res.status(409).json({ error: 'An account already exists with that email or roll number' });
+        const profileResult = normalizeStudentFields(req.body);
+        if (!isEmail(email)) return res.status(400).json({ error: 'Enter a valid student email address' });
+        if (profileResult.error) return res.status(400).json({ error: profileResult.error });
+        if (await User.exists({ email }) || await Student.exists({ roll: profileResult.data.roll })) {
+            return res.status(409).json({ error: 'An account already exists with that email or roll number' });
+        }
 
         const temporaryPassword = crypto.randomBytes(6).toString('base64url');
-        const student = await User.create({
-            name, email, roll, mobileNo, role: 'student',
-            fatherName: req.body.fatherName || '', fatherMobile: req.body.fatherMobile || '',
-            address: req.body.address || '', previous_health: req.body.previous_health || '',
-            age: req.body.age || undefined, bloodGroup: req.body.bloodGroup || '',
-            password: await bcrypt.hash(temporaryPassword, 12),
-        });
+        const { student, user } = await createStudentAccount({ profile: profileResult.data, email, password: temporaryPassword });
 
         let passwordDelivered = false;
         if (isMailConfigured()) {
-            await sendMail({ to: email, subject: 'Your dispensary account', text: `Your account is ready. Sign in with ${email} and temporary password ${temporaryPassword}. Please change the password after signing in.` });
-            passwordDelivered = true;
+            try {
+                await sendMail({ to: email, subject: 'Your dispensary account', text: `Your account is ready. Sign in with ${email} and temporary password ${temporaryPassword}. Please change the password after signing in.` });
+                passwordDelivered = true;
+            } catch (mailError) {
+                console.error('Student welcome email failed:', mailError.message);
+            }
         }
-        return res.status(201).json({ message: 'Student account created', student: sanitizeUser(student), temporaryPassword: passwordDelivered ? undefined : temporaryPassword });
+        return res.status(201).json({ message: 'Student account created', student: studentResponse(student, user), temporaryPassword: passwordDelivered ? undefined : temporaryPassword });
     } catch (error) {
         if (error.code === 11000) return res.status(409).json({ error: 'An account already exists with that email or roll number' });
         console.error('Student account creation failed:', error);
@@ -266,12 +243,13 @@ exports.addStaffsByAdmin = async (req, res) => {
         const password = String(req.body.password || '');
         const designation = String(req.body.designation || '').trim();
         const mobileNo = String(req.body.mobileNo || '').trim();
-        if (!name || !isEmail(email) || password.length < 8 || !designation || !mobileNo) {
+        const role = ['staff', 'doctor'].includes(req.body.role) ? req.body.role : 'staff';
+        if (!name || name.length > 120 || !isEmail(email) || password.length < 8 || password.length > 128 || !designation || designation.length > 120 || !isPhone(mobileNo)) {
             return res.status(400).json({ error: 'Enter a name, valid email, password of at least 8 characters, designation and mobile number' });
         }
         if (await User.exists({ email })) return res.status(409).json({ error: 'An account already exists with that email' });
-        const staff = await User.create({ name, email, password: await bcrypt.hash(password, 12), designation, mobileNo, role: 'staff' });
-        return res.status(201).json({ message: 'Staff account created', staff: sanitizeUser(staff) });
+        const staff = await User.create({ name, email, password: await bcrypt.hash(password, 12), designation, mobileNo, role });
+        return res.status(201).json({ message: role === 'doctor' ? 'Doctor account created' : 'Staff account created', staff: sanitizeUser(staff) });
     } catch (error) {
         if (error.code === 11000) return res.status(409).json({ error: 'An account already exists with that email' });
         console.error('Staff creation failed:', error);
@@ -281,7 +259,7 @@ exports.addStaffsByAdmin = async (req, res) => {
 
 exports.getAllStaffs = async (_req, res) => {
     try {
-        const staffs = await User.find({ role: 'staff' }).select('name designation email mobileNo').sort({ name: 1 });
+        const staffs = await User.find({ role: { $in: ['staff', 'doctor'] } }).select('name designation email mobileNo role').sort({ name: 1 });
         return res.status(200).json({ staffs });
     } catch (error) {
         console.error('Staff list failed:', error);
@@ -291,7 +269,7 @@ exports.getAllStaffs = async (_req, res) => {
 
 exports.getStaffsForManagement = async (_req, res) => {
     try {
-        const staffs = await User.find({ role: 'staff' }).select('name email designation mobileNo').sort({ name: 1 });
+        const staffs = await User.find({ role: { $in: ['staff', 'doctor'] } }).select('name email designation mobileNo role').sort({ name: 1 });
         return res.status(200).json({ staffs });
     } catch (error) {
         console.error('Staff management list failed:', error);
@@ -302,7 +280,7 @@ exports.getStaffsForManagement = async (_req, res) => {
 exports.updateStaffById = async (req, res) => {
     try {
         const staff = await User.findById(req.params.id);
-        if (!staff || staff.role !== 'staff') return res.status(404).json({ error: 'Staff member not found' });
+        if (!staff || !['staff', 'doctor'].includes(staff.role)) return res.status(404).json({ error: 'Staff member not found' });
         for (const field of ['name', 'designation', 'mobileNo']) {
             if (req.body[field] !== undefined) staff[field] = String(req.body[field]).trim();
         }
@@ -317,7 +295,7 @@ exports.updateStaffById = async (req, res) => {
 
 exports.deleteStaff = async (req, res) => {
     try {
-        const staff = await User.findOneAndDelete({ _id: req.params.id, role: 'staff' });
+        const staff = await User.findOneAndDelete({ _id: req.params.id, role: { $in: ['staff', 'doctor'] } });
         if (!staff) return res.status(404).json({ error: 'Staff member not found' });
         return res.status(200).json({ message: 'Staff account removed' });
     } catch (error) {

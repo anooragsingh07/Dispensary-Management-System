@@ -17,7 +17,7 @@ exports.authenticate = async (req, res, next) => {
         if (!token) return res.status(401).json({ error: 'Please sign in to continue' });
 
         const decoded = jwt.verify(token, getJwtSecret());
-        const user = await UserModel.findById(decoded.userId).select('-password -resetPasswordTokenHash -resetPasswordExpires -resetPasswordAttempts -passwordResetTokenHash');
+        const user = await UserModel.findById(decoded.userId).select('-password').populate('studentId');
         if (!user) return res.status(401).json({ error: 'Your account could not be found' });
         if ((decoded.authVersion || 0) !== (user.authVersion || 0)) return res.status(401).json({ error: 'Your session has expired. Please sign in again.' });
 
@@ -34,7 +34,12 @@ exports.studentAuth = [exports.authenticate, (req, res, next) => {
 }];
 
 exports.adminFacultyAuth = [exports.authenticate, (req, res, next) => {
-    if (!['admin', 'staff'].includes(req.user.role)) return res.status(403).json({ error: 'Staff access is required' });
+    if (!['admin', 'doctor', 'staff'].includes(req.user.role)) return res.status(403).json({ error: 'Authorized clinical staff access is required' });
+    return next();
+}];
+
+exports.adminStaffAuth = [exports.authenticate, (req, res, next) => {
+    if (!['admin', 'staff'].includes(req.user.role)) return res.status(403).json({ error: 'Administrator or dispensary staff access is required' });
     return next();
 }];
 

@@ -28,6 +28,7 @@ app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok' }));
 app.use('/api/auth', require('./Routes/user'));
 app.use('/api/medicine', require('./Routes/medicine'));
 app.use('/api/history', require('./Routes/history'));
+app.use('/api/consultations', require('./Routes/consultation'));
 app.use('/api/facility', require('./Routes/facility'));
 app.use('/api/hospital', require('./Routes/nearByHospital'));
 app.use('/api/notification', require('./Routes/notification'));

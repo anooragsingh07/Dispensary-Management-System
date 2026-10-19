@@ -5,9 +5,6 @@ const Authentication = require('../Authentication/auth');
 
 router.post('/register', UserController.register);
 router.post('/login', UserController.login);
-router.post('/send-otp', UserController.sendOtp);
-router.post('/verify-otp', UserController.verifyOtp);
-router.post('/reset-password', UserController.resetPassword);
 router.get('/me', Authentication.authenticate, UserController.getCurrentUser);
 router.post('/logout', Authentication.authenticate, UserController.logout);
 
