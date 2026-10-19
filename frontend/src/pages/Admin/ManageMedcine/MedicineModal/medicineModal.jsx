@@ -17,7 +17,7 @@ const MedicineModal = (props) => {
         props.showLoader();
         await axios.put(`/api/medicine/update/${props.clickedMedicine._id}`, medicine, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
-            window.location.reload()
+            props.onClose()
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to update medicine")
         }).finally(() => {
@@ -39,7 +39,7 @@ const MedicineModal = (props) => {
         props.showLoader();
         await axios.post('/api/medicine/add', medicine, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
-            window.location.reload()
+            props.onClose()
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to add medicine")
         }).finally(() => {

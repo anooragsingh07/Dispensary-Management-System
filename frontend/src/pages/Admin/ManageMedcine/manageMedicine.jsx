@@ -114,7 +114,7 @@ const ManageMedicine = (props) => {
                 </div>
             </div>
             {
-                addModal && <Modal header={clickedMedicine ? "Update Medicine" : "Add Medicine"} handleClose={onOffmodal} children={<MedicineModal clickedMedicine={clickedMedicine} showLoader={props.showLoader} hideLoader={props.hideLoader} />} />
+                addModal && <Modal header={clickedMedicine ? "Update Medicine" : "Add Medicine"} handleClose={onOffmodal} children={<MedicineModal clickedMedicine={clickedMedicine} onClose={onOffmodal} showLoader={props.showLoader} hideLoader={props.hideLoader} />} />
             }
             <ToastContainer />
         </div>
