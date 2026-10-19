@@ -57,6 +57,20 @@
     gap: 20px;
     width: 90%;
 }
+.student-credentials-card { margin-top: 20px; padding: 20px 22px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.student-credentials-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.student-credentials-heading .eyebrow { margin: 0 0 5px; color: var(--muted); font-size: 10px; letter-spacing: .08em; }
+.student-credentials-heading h2 { margin: 0; color: var(--ink); font-size: 18px; }
+.student-credentials-heading > span { border: 1px solid var(--border); border-radius: 99px; padding: 7px 11px; color: var(--muted); font-size: 11px; }
+.student-credentials-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.student-credential-item { display: grid; min-width: 0; gap: 8px; }
+.student-credential-item > span, .student-credential-item > label { color: var(--muted); font-size: 12px; }
+.student-credential-item > strong { overflow-wrap: anywhere; color: var(--ink); font-size: 14px; font-weight: 600; }
+.student-password-control { display: flex; gap: 8px; }
+.student-password-control input { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface-soft); color: var(--ink); font: inherit; }
+.student-password-copy { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; font-size: 12px; }
+.student-password-copy:hover { background: var(--surface-soft); }
+.student-credentials-note { margin: 14px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .student-consultation-history { margin-top: 20px; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
 .student-consultation-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; border-bottom: 1px solid var(--border); padding: 18px 22px; }
 .student-consultation-heading .eyebrow { margin: 0 0 5px; color: var(--muted); font-size: 10px; letter-spacing: .08em; }
@@ -75,6 +89,9 @@
 .timeline-copy span { overflow: hidden; color: #596171; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .timeline-copy small { color: var(--muted); font-size: 10px; }
 @media (max-width: 520px) {
+  .student-credentials-grid { grid-template-columns: 1fr; }
+  .student-password-control { align-items: stretch; }
+  .student-password-copy { padding-inline: 9px; }
   .student-consultation-heading { align-items: flex-start; padding: 15px; }
   .consultation-timeline-row { flex-wrap: wrap; padding: 12px 15px; }
   .timeline-copy { flex-basis: calc(100% - 50px); }

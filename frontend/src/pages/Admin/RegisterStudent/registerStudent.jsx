@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import './registerStudent.css';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
 import RemoveRedEyeOutlinedIcon from '@mui/icons-material/RemoveRedEyeOutlined';
 import { Link } from 'react-router-dom';
@@ -19,6 +20,7 @@ const RegisterStudent = (props) => {
     const [reportModal, setReportModal] = useState(false);
     const [selectedConsultation, setSelectedConsultation] = useState(null);
     const [studentDetail, setStudentDetail] = useState(emptyStudent);
+    const [createdStudentAccount, setCreatedStudentAccount] = useState(null);
     const [consultations, setConsultations] = useState([]);
     const [consultationsLoading, setConsultationsLoading] = useState(false);
 
@@ -48,6 +50,7 @@ const RegisterStudent = (props) => {
     const handleSearch = async () => {
         const roll = searchStudent.trim();
         if (!roll) return toast.error('Enter a roll number to search');
+        setCreatedStudentAccount(null);
         props.showLoader();
         try {
             const { data } = await axios.get(`/api/auth/get-student/${encodeURIComponent(roll)}`);
@@ -75,11 +78,27 @@ const RegisterStudent = (props) => {
             } else {
                 const { data } = await axios.post('/api/auth/register-student', studentDetail);
                 setStudentDetail({ ...emptyStudent, ...data.student });
-                toast.success(`${data.message}${data.temporaryPassword ? ` · Temporary password: ${data.temporaryPassword}` : ''}`);
+                setCreatedStudentAccount({
+                    studentId: data.student._id,
+                    email: data.student.email,
+                    password: data.temporaryPassword,
+                    passwordDelivered: data.passwordDelivered,
+                });
+                toast.success(data.message || 'Student account created');
             }
         } catch (error) {
             toast.error(error?.response?.data?.error || 'Unable to save student profile');
         } finally { props.hideLoader(); }
+    };
+
+    const copyStudentPassword = async () => {
+        if (!createdStudentAccount?.password) return;
+        try {
+            await navigator.clipboard.writeText(createdStudentAccount.password);
+            toast.success('Student password copied');
+        } catch {
+            toast.error('Could not copy the password. Select and copy it manually.');
+        }
     };
 
     const handleConsultationSaved = async () => {
@@ -113,6 +132,24 @@ const RegisterStudent = (props) => {
                 </div>
             </form>
         </section>
+
+        {createdStudentAccount?.password && studentDetail._id === createdStudentAccount.studentId && <section className="student-credentials-card" aria-live="polite">
+            <div className="student-credentials-heading">
+                <div><p className="eyebrow">STUDENT SIGN-IN</p><h2>Account created</h2></div>
+                <span>{createdStudentAccount.passwordDelivered ? 'Email sent' : 'Share with student'}</span>
+            </div>
+            <div className="student-credentials-grid">
+                <div className="student-credential-item"><span>Login email</span><strong>{createdStudentAccount.email}</strong></div>
+                <div className="student-credential-item student-password-item">
+                    <label htmlFor="new-student-password">Temporary password</label>
+                    <div className="student-password-control">
+                        <input id="new-student-password" type="text" value={createdStudentAccount.password} readOnly />
+                        <button type="button" className="student-password-copy" onClick={copyStudentPassword}><ContentCopyOutlinedIcon fontSize="small" /> Copy</button>
+                    </div>
+                </div>
+            </div>
+            <p className="student-credentials-note">Share or save this password now. It won’t be shown again after you search for another student or leave this page.{createdStudentAccount.passwordDelivered ? ' A copy was also emailed to the student.' : ''}</p>
+        </section>}
 
         {studentDetail._id && <section className="student-consultation-history">
             <div className="student-consultation-heading"><div><p className="eyebrow">MEDICAL RECORD</p><h2>Consultation history</h2></div><span>{studentDetail.bloodGroup || 'Blood group not recorded'}</span></div>

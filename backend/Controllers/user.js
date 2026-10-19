@@ -222,13 +222,18 @@ exports.registerStudentByStaff = async (req, res) => {
         let passwordDelivered = false;
         if (isMailConfigured()) {
             try {
-                await sendMail({ to: email, subject: 'Your dispensary account', text: `Your account is ready. Sign in with ${email} and temporary password ${temporaryPassword}. Please change the password after signing in.` });
+                await sendMail({ to: email, subject: 'Your dispensary account', text: `Your account is ready. Sign in with ${email} and password ${temporaryPassword}. Keep these sign-in details safe.` });
                 passwordDelivered = true;
             } catch (mailError) {
                 console.error('Student welcome email failed:', mailError.message);
             }
         }
-        return res.status(201).json({ message: 'Student account created', student: studentResponse(student, user), temporaryPassword: passwordDelivered ? undefined : temporaryPassword });
+        return res.status(201).json({
+            message: 'Student account created',
+            student: studentResponse(student, user),
+            temporaryPassword,
+            passwordDelivered,
+        });
     } catch (error) {
         if (error.code === 11000) return res.status(409).json({ error: 'An account already exists with that email or roll number' });
         console.error('Student account creation failed:', error);
