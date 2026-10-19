@@ -63,7 +63,7 @@ const Facility = (props) => {
 
             <div className='admin-facility-header'>
                 <div>Facilities</div>
-                <div className='add-facility-btn' onClick={onOFModal}>Add </div>
+                <button type='button' className='add-facility-btn' onClick={onOFModal}>Add facility</button>
             </div>
 
             <div className='admin-facility-rows'>
@@ -77,8 +77,8 @@ const Facility = (props) => {
                                     <div>{item.description}</div>
                                 </div>
                                 <div className='admin-facility-btns'>
-                                    <EditIcon className='delete-icon' onClick={() => handleEdit(item)} />
-                                    <DeleteIcon className='delete-icon' onClick={() => handlDelete(item._id)} />
+                                    <button type='button' className='icon-action' aria-label={`Edit ${item.title}`} title='Edit facility' onClick={() => handleEdit(item)}><EditIcon /></button>
+                                    <button type='button' className='icon-action icon-action-danger' aria-label={`Delete ${item.title}`} title='Delete facility' onClick={() => handlDelete(item._id)}><DeleteIcon /></button>
                                 </div>
                             </div>
                         );
@@ -86,7 +86,7 @@ const Facility = (props) => {
                 }
 
                 {
-                    data.length === 0 && <div>No facilities added yet.</div>
+                    data.length === 0 && <div className='empty-state'>No facilities added yet. Add one to share available services with students.</div>
                 }
             </div>
             {modal && <Modal header={clickedItem ? "Update Facility" : "Add Facility"} handleClose={onOFModal} children={<FacilityModal clickedItem={clickedItem} onClose={onOFModal} showLoader={props.showLoader} hideLoader={props.hideLoader} />} />}

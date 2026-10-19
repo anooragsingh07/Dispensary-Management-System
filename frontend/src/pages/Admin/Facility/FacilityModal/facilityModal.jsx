@@ -51,10 +51,10 @@ const FacilityModal = (props) => {
             <form className='register-form' onSubmit={handleSubmit}>
                 <div className='register-form-div'>
                     <div className='register-input-box'>
-                        <input value={inputField.title} onChange={(event) => handleOnChange(event, "title")} className='input-box-register' type='text' placeholder='Facility Title' />
+                        <input aria-label='Facility title' value={inputField.title} onChange={(event) => handleOnChange(event, "title")} className='input-box-register' type='text' placeholder='Facility title' />
                     </div>
                     <div className='register-input-box'>
-                        <input value={inputField.description} onChange={(event) => handleOnChange(event, "description")} className='input-box-register' type='text' placeholder='Description' />
+                        <textarea aria-label='Facility description' value={inputField.description} onChange={(event) => handleOnChange(event, "description")} className='input-box-register input-box-register-textarea' rows='3' placeholder='Description' />
                     </div>
                 </div>
 

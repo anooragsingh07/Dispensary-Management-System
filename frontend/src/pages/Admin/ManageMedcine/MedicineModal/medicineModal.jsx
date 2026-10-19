@@ -52,13 +52,13 @@ const MedicineModal = (props) => {
         <form onSubmit={handleSubmit}>
             <div className='register-form-div'>
                 <div className='register-input-box'>
-                    <input value={medicine.name} onChange={(event) => handleOnChange(event, "name")} className='input-box-register' type='text' placeholder='Medicine Name' />
+                    <input aria-label='Medicine name' value={medicine.name} onChange={(event) => handleOnChange(event, "name")} className='input-box-register' type='text' placeholder='Medicine name' />
                 </div>
                 <div className='register-input-box'>
-                    <input value={medicine.quantity} onChange={(event) => handleOnChange(event, "quantity")} className='input-box-register' type='number' min='0' step='1' placeholder='Quantity' />
+                    <input aria-label='Medicine quantity' value={medicine.quantity} onChange={(event) => handleOnChange(event, "quantity")} className='input-box-register' type='number' min='0' step='1' placeholder='Quantity' />
                 </div>
                 <div className='register-input-box'>
-                    <input value={medicine.usage} onChange={(event) => handleOnChange(event, "usage")} className='input-box-register' type='text' placeholder='Usage' />
+                    <input aria-label='Medicine usage' value={medicine.usage} onChange={(event) => handleOnChange(event, "usage")} className='input-box-register' type='text' placeholder='Usage instructions' />
                 </div>
             </div>
             <button type='submit' className='form-btn reg-btn' >{props.clickedMedicine ? "Update" : "Add"}</button>

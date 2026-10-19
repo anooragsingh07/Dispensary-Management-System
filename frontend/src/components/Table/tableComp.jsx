@@ -8,10 +8,11 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
+const StyledTableCell = styled(TableCell)(() => ({
   [`&.${tableCellClasses.head}`]: {
-    backgroundColor: '#255674',
-    color: theme.palette.common.white,
+    backgroundColor: '#f4f4f4',
+    color: '#171717',
+    fontWeight: 700,
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,

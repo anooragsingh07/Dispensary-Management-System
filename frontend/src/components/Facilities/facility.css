@@ -1,6 +1,6 @@
 .facility-header{
     font-size: 21px;
-    color: #255674;
+    color: var(--brand);
     font-weight: 500;
     margin-bottom: 40px;
 }
@@ -17,7 +17,7 @@
 }
 .facility-list-header{
     font-weight: 600;
-    color: #255674;
+    color: var(--brand);
     font-size: 20px;
 }
 .facility-list-value{

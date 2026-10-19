@@ -1,23 +1,23 @@
 .admin-facility{
     padding: 60px 100px;
-    background-color: whitesmoke;
+    background-color: var(--surface-soft);
 }
 .admin-facility-header{
     font-size: 28px;
-    color: #255674;
+    color: var(--brand);
     display: flex;
     justify-content: space-between;
 }
 .add-facility-btn{
     padding: 10px 20px;
-    background-color: #255674;
+    background-color: var(--brand);
     color: white;
     height: fit-content;
     border-radius: 5px;
     font-size: 16px;
     cursor: pointer;
     &:hover{
-        background-color: #2c98dc;
+        background-color: var(--brand-hover);
     }
 }
 
@@ -39,7 +39,7 @@
 
 .admin-facility-title{
     font-size: 20px;
-    color: #255674;
+    color: var(--brand);
     font-weight: 700;
 }
 

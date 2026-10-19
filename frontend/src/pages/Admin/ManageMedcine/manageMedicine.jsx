@@ -73,7 +73,7 @@ const ManageMedicine = (props) => {
 
             <div className='top-manage-medicine'>
                 <SearchBox placeholder="Search Medicine " value={medicineSearch} onChange={onChangeValue} />
-                <div className='add-manage-medicine' onClick={onOffmodal} >Add</div>
+                <button type='button' className='add-manage-medicine' onClick={onOffmodal}>Add medicine</button>
             </div>
 
             <div className='manageMedicine-card'>
@@ -93,16 +93,16 @@ const ManageMedicine = (props) => {
                                     <div className='col-2-rm'>{item.quantity}</div>
                                     <div className='col-3-rm'>{item.usage}</div>
                                     <div className='col-4-rm'>
-                                        <EditIcon className='delete-icon' onClick={() => handleEdit(item)} />
-                                        <DeleteIcon className='delete-icon' onClick={() => handleDelete(item._id)} />
+                                        <button type='button' className='icon-action' aria-label={`Edit ${item.name}`} title='Edit medicine' onClick={() => handleEdit(item)}><EditIcon /></button>
+                                        <button type='button' className='icon-action icon-action-danger' aria-label={`Delete ${item.name}`} title='Delete medicine' onClick={() => handleDelete(item._id)}><DeleteIcon /></button>
                                     </div>
                                 </div>
                             })
                         }
 
                         {
-                            data.length === 0 && <div className='report-form-row' >
-                                <div className=''>No Any medicine yet</div>
+                            data.length === 0 && <div className='empty-state'>
+                                No medicines found. Add a medicine or change your search.
 
                             </div>
                         }

@@ -63,7 +63,7 @@ const NearByHospital = (props) => {
 
             <div className='admin-facility-header'>
                 <div>Near By Hospitals</div>
-                <div className='add-facility-btn' onClick={onOFModal}>Add</div>
+                <button type='button' className='add-facility-btn' onClick={onOFModal}>Add hospital</button>
             </div>
 
             <div className='admin-facility-rows'>
@@ -79,8 +79,8 @@ const NearByHospital = (props) => {
                                     <div>{item.contact}</div>
                                 </div>
                                 <div className='admin-facility-btns'>
-                                    <EditIcon className='delete-icon' onClick={() => handleEdit(item)} />
-                                    <DeleteIcon className='delete-icon' onClick={() => handleDelete(item._id)} />
+                                    <button type='button' className='icon-action' aria-label={`Edit ${item.name}`} title='Edit hospital' onClick={() => handleEdit(item)}><EditIcon /></button>
+                                    <button type='button' className='icon-action icon-action-danger' aria-label={`Delete ${item.name}`} title='Delete hospital' onClick={() => handleDelete(item._id)}><DeleteIcon /></button>
                                 </div>
 
                             </div>
@@ -89,7 +89,7 @@ const NearByHospital = (props) => {
                 }
 
                 {
-                    data.length === 0 && <div>No hospitals added yet.</div>
+                    data.length === 0 && <div className='empty-state'>No nearby hospitals added yet. Add a hospital to make local care options easy to find.</div>
                 }
             </div>
             {modal && <Modal header={clickedItem ? "Update Hospital" : "Add Hospital"} handleClose={onOFModal} children={<NearByModal clickedItem={clickedItem} onClose={onOFModal} showLoader={props.showLoader} hideLoader={props.hideLoader} />} />}

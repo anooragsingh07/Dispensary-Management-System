@@ -4,6 +4,7 @@ import SearchBox from '../../components/SearchBox/searchBox'
 import TableComp from '../../components/Table/tableComp';
 import axios from '@/api/client'
 import { toast } from 'react-toastify';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 const Stock = (props) => {
     const [medicineName, setMedicineName] = useState("");
     const [stocks, setStocks] = useState([]);
@@ -40,6 +41,10 @@ const Stock = (props) => {
     }, [medicineName])
     return (
         <div className='stock-page'>
+            <div className="stock-heading">
+                <div><p className="eyebrow"><span className="eyebrow-dot" /> CAMPUS HEALTH CENTRE</p><h1>Medicine stock</h1><p>Check the medicines currently listed by the dispensary.</p></div>
+                <span className="stock-heading-icon"><Inventory2OutlinedIcon /></span>
+            </div>
             <SearchBox placeholder="Search medicine" value={medicineName} onChange={handleInputChange} />
             <div className='stock-page-card'>
                 <TableComp header={headers} data={stocks} />

@@ -20,7 +20,7 @@ const SearchBox = (props) => {
   return (
     <div className='page-searchBox'>
       <input className='input-box' value={value} onChange={(event) => handleOnChange(event)} placeholder={placeholder} />
-      <div className='search-btn' onClick={handleClick} ><SearchIcon /></div>
+      <button type='button' className='search-btn' onClick={handleClick} aria-label='Search'><SearchIcon /></button>
     </div>
   )
 }

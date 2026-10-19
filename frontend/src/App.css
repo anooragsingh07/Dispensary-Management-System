@@ -1,10 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lora:ital,wght@0,400..700;1,400..700&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100..900;1,100..900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
-
-.App{
-  padding: 0;
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   margin: 0;
-  box-sizing: border-box;
-  font-family: "Lora", serif;
-  font-optical-sizing: auto;
-  font-style: normal;
+  padding: 0;
+  color: var(--ink);
+  font-family: 'Inter', Arial, sans-serif;
+}
+
+.App > main,
+.App > .home,
+.App > .student-dashboard,
+.App > .adminDashboard,
+.App > .stock-page,
+.App > .register-student,
+.App > .manageMedicine,
+.App > .records,
+.App > .admin-facility,
+.App > .gallary-admin { flex: 1; }
+
+.session-loading {
+  width: min(100% - 40px, var(--content-width));
+  margin: 90px auto;
+  color: var(--muted);
+  font-size: 15px;
 }

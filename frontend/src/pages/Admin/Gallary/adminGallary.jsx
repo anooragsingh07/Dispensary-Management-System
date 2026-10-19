@@ -54,22 +54,22 @@ const AdminGallary = (props) => {
         <div className='gallary-admin'>
             <div className='go-back'><Link to={'/admin/dashboard'}><ArrowBackIcon /> Back To Dashboard</Link></div>
 
-            <div className='add-pic-gallary-btn' onClick={setAddModalFunc}>Add</div>
+            <button type='button' className='add-pic-gallary-btn' onClick={setAddModalFunc}>Add image</button>
 
             <div className='gallary-home'>
 
                 {
                     data.map((item) => {
                         return (
-                            <div className='gallary-home-image-block img-admin' key={item._id} onClick={() => setDeleteModalFunc(item)}>
+                            <button type='button' className='gallary-home-image-block img-admin' key={item._id} onClick={() => setDeleteModalFunc(item)} aria-label='Remove this gallery image'>
                                 <img className='gallary-home-image' src={item.link} alt='gallery' />
-                            </div>
+                            </button>
                         );
                     })
                 }
 
                 {
-                    data.length === 0 && <div>No gallery images added yet.</div>
+                    data.length === 0 && <div className='empty-state'>The gallery is empty. Add an image to share campus health updates.</div>
                 }
             </div>
             {addModal && <AddModal onClose={() => setAddModal(false)} onAdded={handleImageAdded} />}

@@ -51,13 +51,13 @@ const NearByModal = (props) => {
         <form className='register-form' onSubmit={handleSubmit}>
             <div className='register-form-div'>
                 <div className='register-input-box'>
-                    <input value={inputField.name} onChange={(event) => handleOnChange(event, "name")} className='input-box-register' type='text' placeholder='Hospital Name' />
+                    <input aria-label='Hospital name' value={inputField.name} onChange={(event) => handleOnChange(event, "name")} className='input-box-register' type='text' placeholder='Hospital name' />
                 </div>
                 <div className='register-input-box'>
-                    <input value={inputField.address} onChange={(event) => handleOnChange(event, "address")} className='input-box-register' type='text' placeholder='Address' />
+                    <input aria-label='Hospital address' value={inputField.address} onChange={(event) => handleOnChange(event, "address")} className='input-box-register' type='text' placeholder='Address' />
                 </div>
                 <div className='register-input-box'>
-                    <input value={inputField.contact} onChange={(event) => handleOnChange(event, "contact")} className='input-box-register' type='text' placeholder='Contact' />
+                    <input aria-label='Hospital contact' value={inputField.contact} onChange={(event) => handleOnChange(event, "contact")} className='input-box-register' type='tel' placeholder='Contact' />
                 </div>
             </div>
 

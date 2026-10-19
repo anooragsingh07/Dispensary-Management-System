@@ -25,8 +25,8 @@ const DeleteModal = ({ clickedItem, onClose, onDeleted }) => {
       <div className="addModal-card">
         <div>Remove this image from the gallery?</div>
         <div className="modal-add-btns">
-          <button type="button" className="cancel-modal-btn" onClick={onClose} disabled={deleting}>Keep image</button>
-          <button type="button" className="cancel-modal-btn" onClick={handleDelete} disabled={deleting} aria-label="Delete image">
+          <button type="button" className="button-secondary cancel-modal-btn" onClick={onClose} disabled={deleting}>Keep image</button>
+          <button type="button" className="cancel-modal-btn gallery-delete-confirm" onClick={handleDelete} disabled={deleting} aria-label="Delete image">
             {deleting ? 'Removing…' : <DeleteIcon />}
           </button>
         </div>

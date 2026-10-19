@@ -1,6 +1,6 @@
 .manageMedicine{
     padding: 60px 100px;
-    background-color: whitesmoke;
+    background-color: var(--surface-soft);
 
 }
 
@@ -16,10 +16,10 @@
     height: fit-content;
     cursor: pointer;
     border-radius: 4px;
-    background-color: #255674;
+    background-color: var(--brand);
     color: white;
     &:hover{
-        background-color: #2c98dc;
+        background-color: var(--brand-hover);
     }
 }
 

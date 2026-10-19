@@ -3,7 +3,7 @@
     line-height: 34px;
 }
 .about-link{
-    color: #255674;
+    color: var(--brand);
     text-decoration: underline;
 }
 

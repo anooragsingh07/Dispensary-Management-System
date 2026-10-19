@@ -1,16 +1,13 @@
-.stock-page{
-    width: 100%;
-    padding: 40px 100px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
-    background-color: whitesmoke;
-}
-.stock-page-card{
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
-    padding: 40px;
-    width: 80%;
-    box-sizing: border-box;
-    background-color: white;
+.stock-page { display: flex; flex-direction: column; gap: 20px; }
+.stock-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--border); padding-bottom: 25px; }
+.stock-heading .eyebrow { margin-bottom: 10px; }
+.stock-heading h1 { margin: 0; color: #17191f; font-size: clamp(32px, 4vw, 44px); font-weight: 700; letter-spacing: -.065em; }
+.stock-heading > div > p:last-child { margin: 9px 0 0; color: var(--muted); font-size: 13px; }
+.stock-heading-icon { width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid #deddf6; border-radius: 9px; background: #ededff; color: var(--brand); }
+.stock-heading-icon .MuiSvgIcon-root { font-size: 22px; }
+.stock-page-card { width: 100%; }
+
+@media (max-width: 620px) {
+  .stock-page { gap: 16px; }
+  .stock-page-card { padding: 12px; }
 }

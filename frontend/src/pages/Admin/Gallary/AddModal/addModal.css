@@ -38,9 +38,9 @@
     font: inherit;
     color: white;
     cursor: pointer;
-    background-color: #255674;
+    background-color: var(--brand);
     &:hover{
-        background-color: #2c98dc;
+        background-color: var(--brand-hover);
     }
 }
 

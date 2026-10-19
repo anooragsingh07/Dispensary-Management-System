@@ -59,10 +59,10 @@ const ManageEvent = (props) => {
             <form onSubmit={handleSubmitEvent} className='register-form'>
                 <div className='register-form-div'>
                     <div className='register-input-box'>
-                        <input className='input-box-register' value={title} onChange={(event) => setTitle(event.target.value)} placeholder='Event title' />
+                        <input aria-label='Notice title' className='input-box-register' value={title} onChange={(event) => setTitle(event.target.value)} placeholder='Notice title' />
                     </div>
                 </div>
-                <button type='submit' className='form-btn reg-btn'>Add</button>
+                <button type='submit' className='form-btn reg-btn'>Publish notice</button>
 
             </form>
 
@@ -74,13 +74,14 @@ const ManageEvent = (props) => {
                             <div className='list-staff' key={item._id}>
                                 <div>{item.title}</div>
                                 <div className='list-staff-btns'>
-                                    <DeleteIcon className='delete-icon' onClick={() => handleDeleteEvent(item._id)} />
+                                    <button type='button' className='icon-action icon-action-danger' aria-label={`Delete notice: ${item.title}`} title='Delete notice' onClick={() => handleDeleteEvent(item._id)}><DeleteIcon /></button>
                                 </div>
 
                             </div>
                         );
                     })
                 }
+                {data.length === 0 && <div className='empty-state'>No notices have been published yet.</div>}
             </div>
 
             <ToastContainer />

@@ -1,98 +1,49 @@
-.login-page{
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    padding: 100px 160px;
-    box-sizing: border-box;
-    gap: 100px;
-    background: url("https://images.shiksha.com/mediadata/images/1769959402phpddueP3.jpeg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+.login-page {
+  width: min(100% - 48px, 1180px);
+  display: grid;
+  grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr);
+  align-items: center;
+  gap: 54px;
+  margin: 0 auto;
+  padding: 62px 0 76px;
 }
 
-.login-page-card {
-    width: 500px;
-    padding: 40px;
-    border-radius: 10px;
+.login-intro { max-width: 440px; }
+.login-intro .eyebrow { margin-bottom: 18px; }
+.login-intro h1 { margin: 0; color: #14151a; font-size: clamp(42px, 5vw, 60px); font-weight: 700; letter-spacing: -.075em; line-height: 1.02; }
+.login-intro h1 span { color: var(--brand); }
+.login-intro > p:not(.eyebrow) { margin: 21px 0 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+.login-intro-note { display: flex; align-items: flex-start; gap: 12px; margin-top: 36px; border-top: 1px solid var(--border); padding-top: 20px; }
+.login-intro-note > span:first-child { width: 32px; height: 32px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 7px; background: #e9e9ff; color: var(--brand); }
+.login-intro-note .MuiSvgIcon-root { font-size: 18px; }
+.login-intro-note > span:last-child { display: grid; gap: 5px; }
+.login-intro-note strong { color: #242833; font-size: 12px; }
+.login-intro-note small { color: var(--muted); font-size: 11px; line-height: 1.6; }
 
-    background: rgba(255, 255, 255, 0.92);
+.login-cards { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: start; gap: 14px; }
+.login-page-card,
+.signup-page-card { min-width: 0; border: 1px solid var(--border); border-radius: 9px; padding: 22px; background: #fff; box-shadow: none; }
+.auth-card-heading { display: flex; align-items: flex-start; gap: 11px; border-bottom: 1px solid #ececef; padding-bottom: 16px; }
+.auth-card-step { width: 27px; height: 27px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 6px; background: #ededff; color: var(--brand); font-size: 10px; font-weight: 700; }
+.auth-card-heading h2 { margin: 0; color: #1d2028; font-size: 17px; font-weight: 650; letter-spacing: -.04em; }
+.auth-card-heading p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+.form-input-fields { width: 100%; display: flex; flex-direction: column; gap: 14px; margin: 18px 0; }
+.auth-field { display: grid; gap: 7px; color: #3d4552; font-size: 11px; font-weight: 600; }
+.auth-field .form-input { width: 100%; min-height: 43px; padding: 10px 11px; font-size: 12px; font-weight: 400; }
+.form-btn { width: 100%; min-height: 43px; justify-content: space-between; border-radius: 6px; font-size: 12px; }
+.auth-card-footnote { margin: 13px 0 0; color: #747c88; font-size: 10px; line-height: 1.6; }
 
-    border: 1px solid rgba(0, 0, 0, 0.08);
-
-    box-shadow:
-        0 10px 35px rgba(0, 0, 0, 0.15);
-
-    box-sizing: border-box;
-    height: fit-content;
-
-    transition: all 0.3s ease;
+@media (max-width: 960px) {
+  .login-page { grid-template-columns: 1fr; gap: 34px; padding-top: 44px; }
+  .login-intro { max-width: 700px; }
+  .login-intro h1 br { display: none; }
+  .login-intro-note { max-width: 420px; margin-top: 22px; }
 }
 
-.login-page-card:hover {
-    transform: translateY(-4px);
-    box-shadow:
-        0 18px 45px rgba(0, 0, 0, 0.2);
-}
-.card-header-form{
-    text-align: center;
-    font-size: 30px;
-    color: #255674;
-    font-weight: 600;
-}
-
-.form-input-fields{
-    margin: 20px 0px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-}
-
-.form-input{
-    width: 100%;
-    padding:15px 20px;
-    box-sizing: border-box;
-    font-size: 16px;
-    outline: none;
-    border-radius: 10px;
-}
-.form-btn{
-    border-radius: 10px;
-    width: 100%;
-    padding: 15px;
-    text-align: center;
-    border: 1px solid;
-    box-sizing: border-box;
-    color: white;
-    background-color: #255674;
-    font-size: 20px;
-    cursor: pointer;
-}
-.forgot-password-link{
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-.signup-page-card{
-    width: 500px;
-    padding: 40px;
-    border-radius: 10px;
-
-    background: rgba(255, 255, 255, 0.92);
-
-    border: 1px solid rgba(0, 0, 0, 0.08);
-
-    box-shadow:
-        0 10px 35px rgba(0, 0, 0, 0.15);
-
-    box-sizing: border-box;
-    height: fit-content;
-
-    transition: all 0.3s ease;
-}
-.signup-page-card:hover {
-    transform: translateY(-4px);
-    box-shadow:
-        0 18px 45px rgba(0, 0, 0, 0.2);
+@media (max-width: 620px) {
+  .login-page { width: min(100% - 32px, 1180px); gap: 25px; padding: 32px 0 48px; }
+  .login-intro h1 { font-size: 43px; }
+  .login-cards { grid-template-columns: 1fr; }
+  .login-page-card,
+  .signup-page-card { padding: 18px; }
 }

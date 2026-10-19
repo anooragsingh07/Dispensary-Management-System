@@ -61,7 +61,7 @@ const AddModal = ({ onClose, onAdded }) => {
         <div className="modal-add-btns">
           <label className="cancel-modal-btn" htmlFor="gallery-upload">Choose image</label>
           <input id="gallery-upload" className="cancel-file" type="file" accept="image/*" onChange={uploadImage} disabled={uploading || saving} />
-          <button type="button" className="cancel-modal-btn" onClick={onClose} disabled={uploading || saving}>Cancel</button>
+          <button type="button" className="button-secondary cancel-modal-btn" onClick={onClose} disabled={uploading || saving}>Cancel</button>
         </div>
         {(uploading || saving) && <Box sx={{ display: 'flex', justifyContent: 'center', padding: 2 }}><CircularProgress /></Box>}
         {image && <div className="gallary-home-image-block"><img className="gallary-home-image" src={image} alt="Gallery upload preview" /></div>}

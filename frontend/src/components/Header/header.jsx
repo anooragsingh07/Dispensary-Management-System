@@ -1,16 +1,23 @@
 import { useEffect, useState } from 'react';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import api from '@/api/client';
 import './header.css';
 
 const Header = ({ isLogin, user, showLoader, hideLoader, handleLogin }) => {
-  const location = useLocation();
   const navigate = useNavigate();
   const [eventPopup, setEventPopup] = useState(false);
   const [helplinePopup, setHelplinePopup] = useState(false);
   const [events, setEvents] = useState([]);
+  const dashboardPath = user?.role === 'student' ? '/student/' + user._id : '/admin/dashboard';
+  const initials = String(user?.name || 'User')
+    .split(/\s+/)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   useEffect(() => {
     if (!eventPopup) return;
@@ -34,56 +41,56 @@ const Header = ({ isLogin, user, showLoader, hideLoader, handleLogin }) => {
   };
 
   return (
-    <div className="header">
-      <div className="header-college-details">
-        <div className="header-college-details-left">
-          <img className="header-college-details-left-logo" src="https://cgclerp.in/Images/DEFAULT_BG/default_logo1.png" alt="Chandigarh Group of Colleges logo" />
-          <div>
-            <div className="header-college-details-name">Chandigarh Group of Colleges</div>
-            <div className="header-college-details-place">Sector 112, Landran, Mohali, Punjab 140307</div>
-          </div>
-        </div>
-        <div className="header-college-details-right">
-          <div className="header-college-social-media">
-            <a target="_blank" rel="noreferrer" href="https://m.youtube.com/channel/UCnxLo8hcWhq9wIwScNpOW5g" aria-label="YouTube"><img alt="" src="https://cdn-icons-png.flaticon.com/128/3670/3670147.png" className="header-social-media-image" /></a>
-            <a target="_blank" rel="noreferrer" href="https://www.facebook.com/ChandigarhGroupOfCollegesLandran/" aria-label="Facebook"><img alt="" src="https://cdn-icons-png.flaticon.com/128/733/733547.png" className="header-social-media-image" /></a>
-            <a target="_blank" rel="noreferrer" href="https://x.com/CGCPUNJAB" aria-label="X"><img alt="" src="https://cdn-icons-png.flaticon.com/128/5968/5968830.png" className="header-social-media-image" /></a>
-            <a target="_blank" rel="noreferrer" href="https://www.instagram.com/cgc_landran_punjab/" aria-label="Instagram"><img alt="" src="https://th.bing.com/th/id/OIP.0wjhvLpjGf_-r-1lqG3QAQHaHw?rs=1&pid=ImgDetMain" className="header-social-media-image" /></a>
-          </div>
-        </div>
-      </div>
+    <>
+      <header className="app-header">
+        <div className="header-inner">
+          <Link to="/" className="brand-lockup" aria-label="Campus Care home">
+            <span className="brand-symbol"><LocalHospitalOutlinedIcon /></span>
+            <span className="brand-copy"><strong>Campus Care</strong><small>CGC Landran</small></span>
+          </Link>
 
-      <nav className="navbar" aria-label="Main navigation">
-        <Link to="/" className={`navbar-links ${location.pathname === '/' ? 'active-link' : ''}`}>Home</Link>
-        <button type="button" onClick={isLogin ? handleLogout : () => navigate('/login')} className={`navbar-links ${location.pathname === '/login' ? 'active-link' : ''}`}>
-          {isLogin ? `Sign out${user?.name ? ` (${user.name})` : ''}` : 'Sign in'}
-        </button>
-        <Link to="/stock" className={`navbar-links ${location.pathname === '/stock' ? 'active-link' : ''}`}>Medicine stock</Link>
-        <div className="navbar-links event-link" onMouseEnter={() => setEventPopup(true)} onMouseLeave={() => setEventPopup(false)}>
-          <button type="button" className="navbar-link-opt" aria-expanded={eventPopup} onClick={() => setEventPopup((open) => !open)}>
-            Notices <ArrowDropDownIcon />
-          </button>
-          {eventPopup && <div className="navbar-dropdown-popup event-pop">
-            {events.length ? events.map((event) => <div className="popup-notification" key={event._id}>{event.title}</div>) : <div className="popup-notification">No notices right now</div>}
-          </div>}
-        </div>
-        <div className="navbar-links event-link" onMouseEnter={() => setHelplinePopup(true)} onMouseLeave={() => setHelplinePopup(false)}>
-          <button type="button" className="navbar-link-opt" aria-expanded={helplinePopup} onClick={() => setHelplinePopup((open) => !open)}>
-            Helplines <ArrowDropDownIcon />
-          </button>
-          {helplinePopup && <div className="navbar-dropdown-popup helpline-pop">
-            <div className="popup-notification">Emergency: 108</div>
-            <div className="popup-notification">Health Centre: 1346-257400</div>
-            <div className="popup-notification">Ambulance available 24 hours</div>
-          </div>}
-        </div>
-      </nav>
+          <nav className="navbar" aria-label="Main navigation">
+            <div className="navbar-primary">
+              <NavLink to="/" end className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Overview</NavLink>
+              <NavLink to="/stock" className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Medicine stock</NavLink>
+              {isLogin && <NavLink to={dashboardPath} className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Workspace</NavLink>}
 
-      {location.pathname === '/' && <div className="header-banner">
-        <img alt="CGC campus" src="https://yt3.googleusercontent.com/tc40vDQyANxRaCLSN3bjUC-m52zX1yZwnMWcPUcRnFXnuwRoP8S2ogAsgJAs9yr10aIHm4GKPw=w1707-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj" className="header-banner-image" />
-      </div>}
+              <div className="nav-popover-wrap" onMouseEnter={() => setEventPopup(true)} onMouseLeave={() => setEventPopup(false)}>
+                <button type="button" className={'nav-link nav-popover-trigger' + (eventPopup ? ' is-active' : '')} aria-expanded={eventPopup} onClick={() => setEventPopup((open) => !open)}>
+                  Notices <ArrowDropDownIcon fontSize="small" />
+                </button>
+                {eventPopup && <div className="nav-popover" role="region" aria-label="Notices">
+                  <p className="popover-eyebrow">Latest updates</p>
+                  {events.length ? events.map((event) => <div className="popup-notification" key={event._id}>{event.title}</div>) : <div className="popup-notification">No notices right now</div>}
+                </div>}
+              </div>
+            </div>
+
+            <div className="navbar-actions">
+              <div className="nav-popover-wrap" onMouseEnter={() => setHelplinePopup(true)} onMouseLeave={() => setHelplinePopup(false)}>
+                <button type="button" className={'nav-link nav-popover-trigger' + (helplinePopup ? ' is-active' : '')} aria-expanded={helplinePopup} onClick={() => setHelplinePopup((open) => !open)}>
+                  Help <ArrowDropDownIcon fontSize="small" />
+                </button>
+                {helplinePopup && <div className="nav-popover nav-popover-right" role="region" aria-label="Helplines">
+                  <p className="popover-eyebrow">Campus support</p>
+                  <div className="popup-notification"><strong>Emergency</strong><span>108</span></div>
+                  <div className="popup-notification"><strong>Health centre</strong><span>1346-257400</span></div>
+                  <div className="popup-notification"><strong>Ambulance</strong><span>Available 24 hours</span></div>
+                </div>}
+              </div>
+              {isLogin ? <div className="header-user">
+                <Link to={dashboardPath} className="user-identity" aria-label={'Open workspace for ' + user?.name}>
+                  <span className="user-avatar">{initials}</span>
+                  <span className="header-user-name">{user?.name}</span>
+                </Link>
+                <button type="button" onClick={handleLogout} className="header-signin header-signout">Sign out</button>
+              </div> : <Link to="/login" className="header-signin">Sign in</Link>}
+            </div>
+          </nav>
+        </div>
+      </header>
       <ToastContainer />
-    </div>
+    </>
   );
 };
 

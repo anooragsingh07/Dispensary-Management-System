@@ -1,102 +1,97 @@
-import React, { useState } from 'react'
-import './home.css'
-import HomeIcon from '@mui/icons-material/Home';
-import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import Diversity3Icon from '@mui/icons-material/Diversity3';
-import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import ImageIcon from '@mui/icons-material/Image';
+import { useState } from 'react';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
+import Diversity3OutlinedIcon from '@mui/icons-material/Diversity3Outlined';
+import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import AboutUs from '../../components/AboutUs/aboutUs';
 import Staff from '../../components/Staffs/staff';
 import Facility from '../../components/Facilities/facility';
 import NearByHospitals from '../../components/NearByHospitals/nearByHospitals';
 import Gallary from '../../components/Gallary/gallary';
 import { Link } from 'react-router-dom';
-const Home = (props) => {
-    const [page, setPage] = useState("About")
-    let [rightSideHeader, setRightSideHeader] = useState("About Us");
-    const userInfo = props.user;
+import './home.css';
 
-    const handleChangeTab = (pagename) => {
-        setPage(pagename);
-        switch (pagename) {
-            case "About":
-                setRightSideHeader("About Us");
-                break;
-            case "Staff":
-                setRightSideHeader("Our Staffs");
-                break;
-            case "Facilities":
-                setRightSideHeader("Facilities");
-                break;
-            case "NearByHospitals":
-                setRightSideHeader("Near By Hosptals");
-                break;
-            case "Gallary":
-                setRightSideHeader("Gallary");
-                break;
-            default:
-                setRightSideHeader("About Us");
-        }
+const Home = ({ showLoader, hideLoader, user }) => {
+  const [page, setPage] = useState('About');
+  const dashboardPath = user?.role === 'student' ? '/student/' + user._id : '/admin/dashboard';
+  const sections = [
+    { key: 'About', label: 'About the centre', icon: <HomeOutlinedIcon /> },
+    { key: 'Staff', label: 'Staff directory', icon: <PeopleAltOutlinedIcon /> },
+    { key: 'Facilities', label: 'Facilities', icon: <Diversity3OutlinedIcon /> },
+    { key: 'NearByHospitals', label: 'Nearby hospitals', icon: <LocalHospitalOutlinedIcon /> },
+    { key: 'Gallary', label: 'Photo gallery', icon: <ImageOutlinedIcon /> },
+  ];
+
+  const activeSection = sections.find((section) => section.key === page) || sections[0];
+  const renderSection = () => {
+    switch (page) {
+      case 'Staff': return <Staff showLoader={showLoader} hideLoader={hideLoader} />;
+      case 'Facilities': return <Facility showLoader={showLoader} hideLoader={hideLoader} />;
+      case 'NearByHospitals': return <NearByHospitals showLoader={showLoader} hideLoader={hideLoader} />;
+      case 'Gallary': return <Gallary showLoader={showLoader} hideLoader={hideLoader} />;
+      default: return <AboutUs />;
     }
+  };
 
-    const getComponent = () => {
-        switch (page) {
-            case "About":
-                return <AboutUs />;
-            case "Staff":
-                return <Staff showLoader={props.showLoader} hideLoader={props.hideLoader} />;
-            case "Facilities":
-                return <Facility showLoader={props.showLoader} hideLoader={props.hideLoader} />;
-            case "NearByHospitals":
-                return <NearByHospitals showLoader={props.showLoader} hideLoader={props.hideLoader} />;
-            case "Gallary":
-                return <Gallary showLoader={props.showLoader} hideLoader={props.hideLoader} />
-
-            default:
-                return null;
-        }
-    }
-    return (
-        <div className='home'>
-            <div className='home-block'>
-                <div className='home-left-page'>
-                    {
-                        userInfo && userInfo?.role !== 'student' && <Link to={'/admin/dashboard'} className={`home-left-option`} >
-                            <HomeIcon /> Dashboard
-                        </Link>
-                    }
-                    {
-                        userInfo && userInfo?.role === 'student' && <Link to={`/student/${userInfo?._id}`} className={`home-left-option`} >
-                            <HomeIcon /> Profile
-                        </Link>
-                    }
-
-                    <div className={`home-left-option ${page === "About" ? "active-opt" : null}`} onClick={() => { handleChangeTab("About") }}>
-                        <HomeIcon /> About Us
-                    </div>
-                    <div className={`home-left-option ${page === "Staff" ? "active-opt" : null}`} onClick={() => { handleChangeTab("Staff") }}>
-                        <PeopleAltIcon /> Staff
-                    </div>
-                    <div className={`home-left-option ${page === "Facilities" ? "active-opt" : null}`} onClick={() => { handleChangeTab("Facilities") }}>
-                        <Diversity3Icon /> Facilities
-                    </div>
-                    <div className={`home-left-option ${page === "NearByHospitals" ? "active-opt" : null}`} onClick={() => { handleChangeTab("NearByHospitals") }}>
-                        <LocalHospitalIcon /> Near By Hospitals
-                    </div>
-                    <div className={`home-left-option ${page === "Gallary" ? "active-opt" : null}`} onClick={() => { handleChangeTab("Gallary") }}>
-                        <ImageIcon /> Gallary
-                    </div>
-
-                </div>
-                <div className='home-right-page'>
-                    <div className='home-right-header'>{rightSideHeader}</div>
-                    <div className='home-right-section'>
-                        {getComponent()}
-                    </div>
-                </div>
-            </div>
+  return (
+    <main className="home">
+      <section className="home-hero">
+        <div className="hero-copy">
+          <p className="eyebrow"><span className="eyebrow-dot" /> CGC Landran Health Centre</p>
+          <h1>Care that keeps<br /><span>campus moving.</span></h1>
+          <p className="hero-description">Find the people, medicine and support you need, all in one simple place. Your campus health centre is here for you.</p>
+          <div className="hero-actions">
+            <Link to="/stock" className="button-primary">Browse medicine stock <ArrowForwardRoundedIcon fontSize="small" /></Link>
+            <Link to={user ? dashboardPath : '/login'} className="button-secondary">{user ? 'Open your workspace' : 'Student sign in'}</Link>
+          </div>
+          <div className="hero-assurance"><span className="assurance-check">✓</span> Clear health-centre information, whenever you need it.</div>
         </div>
-    )
-}
 
-export default Home
+        <div className="hero-preview" aria-label="Campus care portal overview">
+          <div className="preview-topline"><span className="preview-mark"><LocalHospitalOutlinedIcon /></span><span>Campus care portal</span><span className="preview-status"><i /> Ready to help</span></div>
+          <div className="preview-heading"><p className="preview-kicker">YOUR HEALTH CENTRE</p><h2>Everything in<br />one place.</h2><p>Support for every campus day.</p></div>
+          <div className="preview-links">
+            <Link to="/stock" className="preview-link"><span className="preview-link-icon"><Inventory2OutlinedIcon /></span><span><strong>Medicine stock</strong><small>Check current availability</small></span><ArrowForwardRoundedIcon /></Link>
+            <div className="preview-link"><span className="preview-link-icon preview-link-muted"><PeopleAltOutlinedIcon /></span><span><strong>Care team</strong><small>Meet your health-centre staff</small></span><ArrowForwardRoundedIcon /></div>
+          </div>
+          <div className="preview-footnote"><span className="preview-mini-avatar">CG</span><span>Made for the CGC campus community</span></div>
+        </div>
+      </section>
+
+      <section className="home-benefits" aria-label="Campus care highlights">
+        <div><span className="benefit-number">01</span><span><strong>One trusted place</strong><small>Health-centre details at a glance</small></span></div>
+        <div><span className="benefit-number">02</span><span><strong>Helpful resources</strong><small>Staff, facilities and nearby care</small></span></div>
+        <div><span className="benefit-number">03</span><span><strong>Private student access</strong><small>Your visit history stays in your account</small></span></div>
+      </section>
+
+      <section className="home-discover">
+        <div className="discover-heading">
+          <div><p className="eyebrow">CAMPUS HEALTH, MADE SIMPLE</p><h2>Find what you need.</h2></div>
+          <p>Explore the people and services supporting student wellbeing at CGC Landran.</p>
+        </div>
+        <div className="home-directory">
+          <div className="home-tabs" role="tablist" aria-label="Health centre information">
+            {sections.map((section) => <button
+              type="button"
+              role="tab"
+              id={'tab-' + section.key}
+              aria-selected={page === section.key}
+              className={'home-tab' + (page === section.key ? ' is-selected' : '')}
+              key={section.key}
+              onClick={() => setPage(section.key)}
+            >{section.icon}<span>{section.label}</span><ArrowForwardRoundedIcon className="home-tab-arrow" /></button>)}
+          </div>
+          <section className="home-panel" role="tabpanel" aria-labelledby={'tab-' + activeSection.key}>
+            <div className="home-panel-heading"><div><p className="eyebrow">CGC HEALTH CENTRE</p><h3>{activeSection.label}</h3></div><span className="home-panel-icon">{activeSection.icon}</span></div>
+            <div className="home-panel-content">{renderSection()}</div>
+          </section>
+        </div>
+      </section>
+    </main>
+  );
+};
+
+export default Home;
