@@ -1,6 +1,6 @@
 .register-student{
     padding: 60px 100px;
-    background-color: whitesmoke;
+    background-color: var(--surface-soft);
 }
 
 .go-back{
@@ -9,7 +9,7 @@
     text-decoration: none;
     display: flex;
     align-items: center;
-    color: #255674;
+    color: var(--brand);
     display: flex;
     align-items: center;
 }
@@ -31,7 +31,7 @@
 
 .register-form-header{
     font-size: 24px;
-    color: #255674;
+    color: var(--brand);
     font-weight: 700;
 }
 
@@ -56,4 +56,27 @@
     display: flex;
     gap: 20px;
     width: 90%;
+}
+.student-consultation-history { margin-top: 20px; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.student-consultation-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; border-bottom: 1px solid var(--border); padding: 18px 22px; }
+.student-consultation-heading .eyebrow { margin: 0 0 5px; color: var(--muted); font-size: 10px; letter-spacing: .08em; }
+.student-consultation-heading h2 { margin: 0; color: var(--ink); font-size: 20px; letter-spacing: -.03em; }
+.student-consultation-heading > span { border: 1px solid var(--border); border-radius: 99px; padding: 7px 11px; color: var(--muted); font-size: 11px; }
+.previous-health-card { border-bottom: 1px solid var(--border); padding: 14px 22px; background: #fafafa; }
+.previous-health-card strong { color: var(--ink); font-size: 12px; }
+.previous-health-card p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
+.consultation-timeline { display: grid; }
+.consultation-timeline-row { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px 22px; }
+.consultation-timeline-row + .consultation-timeline-row { border-top: 1px solid #f0f0f2; }
+.timeline-icon { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 8px; background: #f1f2f5; color: #5c6674; }
+.timeline-icon .MuiSvgIcon-root { font-size: 18px; }
+.timeline-copy { flex: 1; display: grid; min-width: 0; gap: 4px; }
+.timeline-copy strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.timeline-copy span { overflow: hidden; color: #596171; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.timeline-copy small { color: var(--muted); font-size: 10px; }
+@media (max-width: 520px) {
+  .student-consultation-heading { align-items: flex-start; padding: 15px; }
+  .consultation-timeline-row { flex-wrap: wrap; padding: 12px 15px; }
+  .timeline-copy { flex-basis: calc(100% - 50px); }
+  .consultation-timeline-row .visit-view-button { margin-left: auto; }
 }

@@ -51,6 +51,7 @@ function App() {
   const showLoader = () => setLoader(true);
   const hideLoader = () => setLoader(false);
   const isStaff = ['admin', 'staff'].includes(user?.role);
+  const isClinical = ['admin', 'doctor', 'staff'].includes(user?.role);
   const isStudent = user?.role === 'student';
   const dashboardPath = isStudent ? `/student/${user._id}` : '/admin/dashboard';
 
@@ -67,10 +68,10 @@ function App() {
         <Route path="/" element={<Home showLoader={showLoader} hideLoader={hideLoader} user={user} />} />
         <Route path="/login" element={checkingSession ? null : user ? <Navigate to={dashboardPath} replace /> : <Login handleLogin={handleLogin} showLoader={showLoader} hideLoader={hideLoader} />} />
         <Route path="/stock" element={<Stock showLoader={showLoader} hideLoader={hideLoader} />} />
-        <Route path="/admin/dashboard" element={<AccessRoute loading={checkingSession} allowed={isStaff}><AdminDashboard user={user} showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
-        <Route path="/admin/register-student" element={<AccessRoute loading={checkingSession} allowed={isStaff}><RegisterStudent showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
+        <Route path="/admin/dashboard" element={<AccessRoute loading={checkingSession} allowed={isClinical}><AdminDashboard user={user} showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
+        <Route path="/admin/register-student" element={<AccessRoute loading={checkingSession} allowed={isClinical}><RegisterStudent showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
         <Route path="/admin/manage-medicine" element={<AccessRoute loading={checkingSession} allowed={isStaff}><ManageMedicine showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
-        <Route path="/admin/records" element={<AccessRoute loading={checkingSession} allowed={isStaff}><Record showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
+        <Route path="/admin/records" element={<AccessRoute loading={checkingSession} allowed={isClinical}><Record showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
         <Route path="/admin/facility" element={<AccessRoute loading={checkingSession} allowed={isStaff}><Facility showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
         <Route path="/admin/near-by-hospital" element={<AccessRoute loading={checkingSession} allowed={isStaff}><NearByHospital showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
         <Route path="/admin/gallary" element={<AccessRoute loading={checkingSession} allowed={isStaff}><AdminGallary showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />

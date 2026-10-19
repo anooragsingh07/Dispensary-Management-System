@@ -1,48 +1,12 @@
-import React from 'react'
-import './recordModal.css'
-const RecordModal = (props) => {
-    const history = props.selectedHistory;
-    return (
-        <div className='record-modal'>
+import React from 'react';
+import ConsultationDetails from '../../../../components/ConsultationDetails/consultationDetails';
 
+const RecordModal = ({ selectedHistory }) => <div className="record-modal">
+    <div className="student-modal-report">
+        <div>{selectedHistory?.studentId?.name}</div>
+        <div>Roll No. {selectedHistory?.studentId?.roll}</div>
+    </div>
+    <ConsultationDetails consultation={selectedHistory} includePrivate />
+</div>;
 
-            <div className='student-modal-report'>
-                <div>{history?.student?.name}</div>
-                <div>Roll No. {history?.roll}</div>
-            </div>
-
-            <div className='student-details-scroll'>
-                <div className='student-modal-detail'>
-                    <div className='student-modal-header'>
-                        {history?.createdAt?.slice(0, 10).split("-").reverse().join("-")}
-                    </div>
-
-                    <div className='student-modal-body-student'>
-                        <div className='student-modal-body-header'>
-                            <div>Medicine Name</div>
-                            <div>Quantity</div>
-                        </div>
-
-                        <div className='student-modal-body-item'>
-                            {
-                                (history?.medicines || []).map((item, index) => {
-                                    return <div className='student-item-modal' key={index}>
-                                        <div>{item.name}</div>
-                                        <div>{item.requiredQuantity}</div>
-                                    </div>
-                                })
-                            }
-
-                        </div>
-                    </div>
-                </div>
-
-
-
-            </div>
-
-        </div>
-    )
-}
-
-export default RecordModal
+export default RecordModal;

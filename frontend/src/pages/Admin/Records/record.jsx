@@ -39,8 +39,9 @@ const Record = (props) => {
 
     const fetchData = async () => {
         props.showLoader()
-        await axios.get(`/api/history/get-history?month=${selectedMonth}&year=${selectedYear}`, { withCredentials: true }).then(response => {
-            setData(response.data.history)
+        const monthNumber = listOfMonth.indexOf(selectedMonth) + 1;
+        await axios.get(`/api/consultations?month=${monthNumber}&year=${selectedYear}`, { withCredentials: true }).then(response => {
+            setData(response.data.consultations || [])
         }).catch(err => {
             toast.error(err?.response?.data?.error || 'Unable to load visit records');
 
@@ -94,11 +95,12 @@ const Record = (props) => {
     const handleClick = async () => {
         if (studentRoll.trim().length === 0) return toast.error("Please Enter Correct Roll No.");
         props.showLoader()
-        await axios.get(`/api/history/get-student/${encodeURIComponent(studentRoll.trim())}`).then(resp => {
-            if ((resp.data.history || []).length === 0) {
+        await axios.get(`/api/auth/get-student/${encodeURIComponent(studentRoll.trim())}`).then(async resp => {
+            const history = await axios.get(`/api/consultations/student/${resp.data.student._id}`);
+            if ((history.data.consultations || []).length === 0) {
                 return toast.error("No records found for this roll number")
             }
-            setSelecetedAllDetaisl(resp.data.history)
+            setSelecetedAllDetaisl(history.data.consultations)
             setAllRecordModal(true)
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to fetch records")
@@ -117,7 +119,7 @@ const Record = (props) => {
                 <div className='record-date-year'>
                     {
                         listOfYear.map((item) => {
-                            return <div className={`record-year ${selectedYear === item ? "active-stats" : ""}`} key={item} onClick={() => setSelectedYear(item)}>{item}</div>
+                        return <button type='button' className={`record-year ${selectedYear === item ? "active-stats" : ""}`} aria-pressed={selectedYear === item} key={item} onClick={() => setSelectedYear(item)}>{item}</button>
                         })
                     }
 
@@ -129,7 +131,7 @@ const Record = (props) => {
                 <div className='record-date-year'>
                     {
                         listOfMonth.map((item) => {
-                            return <div className={`record-year ${selectedMonth === item ? "active-stats" : ""}`} key={item} onClick={() => setSelectedMonth(item)}>{item}</div>
+                        return <button type='button' className={`record-year ${selectedMonth === item ? "active-stats" : ""}`} aria-pressed={selectedMonth === item} key={item} onClick={() => setSelectedMonth(item)}>{item}</button>
                         })
                     }
 
@@ -150,18 +152,18 @@ const Record = (props) => {
                             data.map((item) => {
                                 return (
                                     <div className='report-form-row' key={item._id}>
-                                        <div><RemoveRedEyeIcon className='delete-icon' onClick={() => handleOnOpenModal(item)} /></div>
-                                        <div className='col-2-mng'>{item.student?.name || "N/A"}</div>
-                                        <div className='col-2-mng'>{item.roll}</div>
-                                        <div className='col-3-mng'>{item.createdAt?.slice(0, 10).split("-").reverse().join("-")}</div>
+                                        <div><button type='button' className='icon-action' aria-label={`View visit record for ${item.studentId?.name || item.studentId?.roll || 'student'}`} title='View record' onClick={() => handleOnOpenModal(item)}><RemoveRedEyeIcon /></button></div>
+                                        <div className='col-2-mng'>{item.studentId?.name || "N/A"}</div>
+                                        <div className='col-2-mng'>{item.studentId?.roll || "N/A"}</div>
+                                        <div className='col-3-mng'>{item.visitAt ? new Date(item.visitAt).toLocaleDateString('en-IN') : 'Date unavailable'}</div>
                                     </div>
                                 );
                             })
                         }
 
                         {
-                            data.length === 0 && <div className='report-form-row' >
-                                <div className=''>No Any records yet</div>
+                            data.length === 0 && <div className='empty-state'>
+                                No visit records for {selectedMonth} {selectedYear}.
 
                             </div>
                         }

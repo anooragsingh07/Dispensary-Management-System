@@ -21,7 +21,7 @@
     color: white;
     padding: 10px;
     border-radius: 5px;
-    background-color: #255674;
+    background-color: var(--brand);
 }
 
 .student-modal-body-student{
@@ -33,7 +33,7 @@
     padding: 15px;
     width: 60%;
     box-sizing: border-box;
-    background-color: #255674;
+    background-color: var(--brand);
     color: white;
     display: flex;
     border-radius: 5px;

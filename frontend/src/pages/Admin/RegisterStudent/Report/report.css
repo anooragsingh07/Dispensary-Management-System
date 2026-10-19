@@ -18,7 +18,7 @@
     z-index: 1;
     
     &:hover{
-        background-color: #255674;
+        background-color: var(--brand);
         color: white;
     }
 }
@@ -36,7 +36,7 @@
     padding: 10px 10px;
     border-radius: 5px;
     box-sizing: border-box;
-    background-color: #255674;
+    background-color: var(--brand);
     color: white;
     justify-content: space-between;
 }
@@ -62,7 +62,7 @@
 }
 
 .delete-icon{
-    color: #255674;
+    color: var(--brand);
     cursor: pointer;
     &:hover{
         color: red;
@@ -95,13 +95,55 @@
     font-size: 18px;
     padding: 10px;
     box-sizing: border-box;
-    background-color: #255674;
+    background-color: var(--brand);
     color: white;
     cursor: pointer;
     width: fit-content;
     border-radius: 5px;
     margin-top: 20px;
     &:hover{
-        background-color: #2c98dc;
+        background-color: var(--brand-hover);
     }
+}
+
+.consultation-form { display: grid; gap: 18px; }
+.consultation-section { display: grid; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 18px; }
+.consultation-section:last-of-type { border-bottom: 0; padding-bottom: 0; }
+.consultation-section h3 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 9px; margin: 0; color: var(--ink); font-size: 15px; }
+.consultation-section h3 small { color: var(--muted); font-size: 11px; font-weight: 400; }
+.consultation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.consultation-grid label,
+.consultation-search-label,
+.prescription-row label,
+.consultation-full { display: grid; min-width: 0; gap: 6px; color: #444b57; font-size: 11px; font-weight: 600; }
+.consultation-grid input,
+.consultation-grid textarea,
+.consultation-search-label input,
+.consultation-full textarea,
+.prescription-row input { width: 100%; min-height: 40px; border: 1px solid var(--border-strong); border-radius: 6px; padding: 9px 10px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; font-weight: 400; }
+.consultation-grid textarea,
+.consultation-full textarea { min-height: 72px; resize: vertical; line-height: 1.5; }
+.consultation-full { grid-column: 1 / -1; }
+.consultation-vitals { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.consultation-matches { display: grid; max-height: 180px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+.consultation-matches button { display: flex; justify-content: space-between; gap: 12px; border: 0; border-bottom: 1px solid var(--border); padding: 10px; background: #fff; color: var(--ink); text-align: left; font-size: 12px; cursor: pointer; }
+.consultation-matches button:last-child { border-bottom: 0; }
+.consultation-matches button:hover { background: #f5f5ff; }
+.consultation-matches button span,
+.consultation-hint { color: var(--muted); font-size: 11px; }
+.consultation-matches button:disabled { color: var(--muted); cursor: not-allowed; }
+.consultation-custom-medicine { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px dashed var(--border-strong); border-radius: 6px; padding: 10px; color: var(--muted); font-size: 11px; }
+.consultation-custom-medicine .button-secondary { min-height: 34px; flex: 0 0 auto; padding: 0 10px; font-size: 11px; }
+.prescription-list { display: grid; gap: 10px; }
+.prescription-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; border: 1px solid var(--border); border-radius: 7px; padding: 12px; background: #fafafa; }
+.prescription-row-title { grid-column: 1 / -1; display: flex; align-items: center; gap: 9px; color: var(--ink); font-size: 12px; }
+.prescription-row-title small { flex: 1; color: var(--muted); font-size: 10px; }
+.consultation-actions { display: flex; justify-content: flex-end; gap: 9px; padding-top: 4px; }
+.consultation-actions button { min-height: 40px; }
+@media (max-width: 620px) {
+  .consultation-grid, .consultation-vitals, .prescription-row { grid-template-columns: 1fr; }
+  .consultation-full, .prescription-row-title { grid-column: auto; }
+  .consultation-actions { flex-direction: column-reverse; }
+  .consultation-actions button { width: 100%; }
+  .consultation-custom-medicine { align-items: flex-start; flex-direction: column; }
 }

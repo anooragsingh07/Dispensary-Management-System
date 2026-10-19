@@ -1,0 +1,15 @@
+.consultation-detail { display: grid; gap: 11px; color: var(--ink); }
+.consultation-detail-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; border: 1px solid var(--border); border-radius: 7px; padding: 11px 12px; background: #f7f7f9; font-size: 12px; }
+.consultation-detail-meta span { color: var(--muted); }
+.consultation-detail section { border-bottom: 1px solid #ececef; padding: 0 2px 10px; }
+.consultation-detail section:last-child { border-bottom: 0; }
+.consultation-detail h3 { margin: 0 0 5px; color: #454c58; font-size: 11px; font-weight: 650; }
+.consultation-detail p,
+.consultation-detail ul { margin: 0; color: #313743; font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.consultation-detail ul { padding-left: 17px; }
+.consultation-detail-prescriptions { display: grid; gap: 7px; }
+.consultation-detail-prescriptions article { display: grid; gap: 3px; border: 1px solid var(--border); border-radius: 6px; padding: 9px 10px; background: #fff; }
+.consultation-detail-prescriptions strong { font-size: 12px; }
+.consultation-detail-prescriptions span,
+.consultation-detail-prescriptions small { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.consultation-private-note { border-radius: 6px; padding: 10px; background: #fff8e7; }

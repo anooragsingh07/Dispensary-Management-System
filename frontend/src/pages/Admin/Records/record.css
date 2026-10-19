@@ -1,5 +1,5 @@
 .records{
-    background-color: whitesmoke;
+    background-color: var(--surface-soft);
     padding: 60px 100px;
 }
 
@@ -22,13 +22,13 @@
     border: 1px solid;
 
     &:hover{
-        background-color: #255674;
+        background-color: var(--brand);
         color: white;
         cursor: pointer;
     }
 }
 
 .active-stats{
-    background-color: #255674;
+    background-color: var(--brand);
     color: white;
 }
