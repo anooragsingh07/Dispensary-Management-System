@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import './manageStaff.css'
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import axios from 'axios';
+import axios from '@/api/client';
 import { toast, ToastContainer } from 'react-toastify';
 const ManageStaff = (props) => {
     const [inputField, setInputField] = useState({ name: "", email: "", password: "", designation: "", mobileNo: "" })
@@ -20,7 +20,7 @@ const ManageStaff = (props) => {
 
     const fetchData = async () => {
         props.showLoader()
-        await axios.get('http://localhost:4000/api/auth/get-staffs').then(resp => {
+        await axios.get('/api/auth/get-staffs/manage').then(resp => {
             setStaffs(resp.data.staffs || [])
         }).catch(err => {
             toast.error(err?.response?.data?.error || "Unable to fetch staffs")
@@ -34,7 +34,7 @@ const ManageStaff = (props) => {
 
     const handleUpdate = async () => {
 
-        await axios.put(`http://localhost:4000/api/auth/update-staff/${clickedStaff?._id}`, inputField, { withCredentials: true }).then(response => {
+        await axios.put(`/api/auth/update-staff/${clickedStaff?._id}`, inputField, { withCredentials: true }).then(response => {
             toast.success(response.data.message)
             setStaffs(staffs.map((item) => item._id === clickedStaff._id ? { ...item, ...inputField, password: undefined } : item))
             clearForm()
@@ -54,7 +54,7 @@ const ManageStaff = (props) => {
 
         if (inputField.name.trim().length === 0 || inputField.email.trim().length === 0 || inputField.password.trim().length === 0 || inputField.designation.trim().length === 0 || inputField.mobileNo.trim().length === 0) return toast.error("Please fill all the details.");
         props.showLoader()
-        await axios.post('http://localhost:4000/api/auth/add-staff', inputField, { withCredentials: true }).then(resp => {
+        await axios.post('/api/auth/add-staff', inputField, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             setStaffs([resp.data.staff, ...staffs])
             clearForm()
@@ -77,7 +77,7 @@ const ManageStaff = (props) => {
 
     const handleDelete = async (id) => {
         props.showLoader()
-        await axios.delete(`http://localhost:4000/api/auth/delete-staff/${id}`, { withCredentials: true }).then(resp => {
+        await axios.delete(`/api/auth/delete-staff/${id}`, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             filterOutData(id)
         }).catch(err => {

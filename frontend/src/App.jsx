@@ -1,10 +1,10 @@
-import { useState } from 'react'
-
-import './App.css'
-import Header from './components/Header/header'
-import { Route, Routes, Navigate } from 'react-router-dom';
-import Home from './pages/Home/home';
+import { useEffect, useState } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import './App.css';
+import api from '@/api/client';
+import Header from './components/Header/header';
 import Footer from './components/Footer/footer';
+import Home from './pages/Home/home';
 import Login from './pages/Login/login';
 import Stock from './pages/Stock/stock';
 import AdminDashboard from './pages/Admin/Dashboard/adminDashboard';
@@ -16,48 +16,82 @@ import NearByHospital from './pages/Admin/NearByHospital/nearByHospital';
 import AdminGallary from './pages/Admin/Gallary/adminGallary';
 import StudentDashboard from './pages/Student/studentDashboard';
 import GlobalLoader from './components/GlobalLoader/globalLoader';
+
+const AccessRoute = ({ loading, allowed, children }) => {
+  if (loading) return <div className="session-loading">Checking your session…</div>;
+  return allowed ? children : <Navigate to="/login" replace />;
+};
+
 function App() {
-
   const [loader, setLoader] = useState(false);
-  const [isLogin, setIsLogin] = useState(localStorage.getItem("isLogin"));
-  let role = localStorage.getItem("userInfo") ? JSON.parse(localStorage.getItem("userInfo")).role : null;
-  let id = localStorage.getItem("userInfo") ? JSON.parse(localStorage.getItem("userInfo"))._id : null;
-  // const canManage = isLogin && role !== 'student';
-  const canManage = true;//remove thisd after commenting upp
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [user, setUser] = useState(null);
 
-  const handleLogin = (value) => {
-    setIsLogin(value)
-  }
+  useEffect(() => {
+    let active = true;
+    api.get('/api/auth/me')
+      .then(({ data }) => {
+        if (!active) return;
+        setUser(data.user);
+        localStorage.setItem('userInfo', JSON.stringify(data.user));
+        localStorage.setItem('isLogin', 'true');
+      })
+      .catch(() => {
+        if (!active) return;
+        setUser(null);
+        localStorage.removeItem('userInfo');
+        localStorage.removeItem('isLogin');
+      })
+      .finally(() => {
+        if (active) setCheckingSession(false);
+      });
+    return () => { active = false; };
+  }, []);
 
-  const showLoader = () => {
-    setLoader(true);
-  }
-  const hideLoader = () => {
-    setLoader(false);
-  }
+  const handleLogin = (account) => {
+    setUser(account || null);
+    if (account) {
+      localStorage.setItem('userInfo', JSON.stringify(account));
+      localStorage.setItem('isLogin', 'true');
+    } else {
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('isLogin');
+    }
+  };
+
+  const showLoader = () => setLoader(true);
+  const hideLoader = () => setLoader(false);
+  const isStaff = ['admin', 'staff'].includes(user?.role);
+  const isStudent = user?.role === 'student';
+  const dashboardPath = isStudent ? `/student/${user._id}` : '/admin/dashboard';
 
   return (
-    <div className='App'>
-      <Header isLogin={isLogin} showLoader={showLoader} handleLogin={handleLogin} hideLoader={hideLoader} />
+    <div className="App">
+      <Header
+        isLogin={Boolean(user)}
+        user={user}
+        showLoader={showLoader}
+        hideLoader={hideLoader}
+        handleLogin={handleLogin}
+      />
       <Routes>
-        <Route path='/' element={<Home showLoader={showLoader} hideLoader={hideLoader} />} />
-        <Route path='/login' element={isLogin ? role === "student" ? <Navigate to={`/student/${id}`} /> : <Navigate to={'/admin/dashboard'} /> : <Login handleLogin={handleLogin} showLoader={showLoader} hideLoader={hideLoader} />} />
-        <Route path='/stock' element={<Stock showLoader={showLoader} hideLoader={hideLoader} />} />
-        <Route path='/admin/dashboard' element={canManage ? <AdminDashboard showLoader={showLoader} hideLoader={hideLoader} /> : <Navigate to="/" />} />
-        <Route path='/admin/register-student' element={canManage ? <RegisterStudent showLoader={showLoader} hideLoader={hideLoader} /> : <Navigate to="/" />} />
-        <Route path='/admin/manage-medicine' element={canManage ? <ManageMedicine showLoader={showLoader} hideLoader={hideLoader} /> : <Navigate to="/" />} />
-        <Route path='/admin/records' element={canManage ? <Record showLoader={showLoader} hideLoader={hideLoader} /> : <Navigate to="/" />} />
-        <Route path='/admin/facility' element={canManage ? <Facility showLoader={showLoader} hideLoader={hideLoader} /> : <Navigate to="/" />} />
-        <Route path='/admin/near-by-hospital' element={canManage ? <NearByHospital showLoader={showLoader} hideLoader={hideLoader} /> : <Navigate to="/" />} />
-        <Route path='/admin/gallary' element={canManage ? <AdminGallary showLoader={showLoader} hideLoader={hideLoader} /> : <Navigate to="/" />} />
-
-        <Route path='/student/:id' element={isLogin && role === "student" ? <StudentDashboard showLoader={showLoader} hideLoader={hideLoader} /> : <Navigate to="/" />} />
+        <Route path="/" element={<Home showLoader={showLoader} hideLoader={hideLoader} user={user} />} />
+        <Route path="/login" element={checkingSession ? null : user ? <Navigate to={dashboardPath} replace /> : <Login handleLogin={handleLogin} showLoader={showLoader} hideLoader={hideLoader} />} />
+        <Route path="/stock" element={<Stock showLoader={showLoader} hideLoader={hideLoader} />} />
+        <Route path="/admin/dashboard" element={<AccessRoute loading={checkingSession} allowed={isStaff}><AdminDashboard user={user} showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
+        <Route path="/admin/register-student" element={<AccessRoute loading={checkingSession} allowed={isStaff}><RegisterStudent showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
+        <Route path="/admin/manage-medicine" element={<AccessRoute loading={checkingSession} allowed={isStaff}><ManageMedicine showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
+        <Route path="/admin/records" element={<AccessRoute loading={checkingSession} allowed={isStaff}><Record showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
+        <Route path="/admin/facility" element={<AccessRoute loading={checkingSession} allowed={isStaff}><Facility showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
+        <Route path="/admin/near-by-hospital" element={<AccessRoute loading={checkingSession} allowed={isStaff}><NearByHospital showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
+        <Route path="/admin/gallary" element={<AccessRoute loading={checkingSession} allowed={isStaff}><AdminGallary showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
+        <Route path="/student/:id" element={<AccessRoute loading={checkingSession} allowed={isStudent}><StudentDashboard showLoader={showLoader} hideLoader={hideLoader} user={user} /></AccessRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Footer />
-
       {loader && <GlobalLoader />}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

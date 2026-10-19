@@ -14,7 +14,7 @@ import { Link } from 'react-router-dom';
 const Home = (props) => {
     const [page, setPage] = useState("About")
     let [rightSideHeader, setRightSideHeader] = useState("About Us");
-    let userInfo = localStorage.getItem("userInfo") ? JSON.parse(localStorage.getItem("userInfo")) : null;
+    const userInfo = props.user;
 
     const handleChangeTab = (pagename) => {
         setPage(pagename);

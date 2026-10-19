@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import './login.css'
 import { toast, ToastContainer } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import axios from '@/api/client'
 import ForgotModal from '../../components/ForgotModal/forgotModal'
 const Login = (props) => {
 
@@ -26,9 +26,7 @@ const Login = (props) => {
     }
 
     const saveLogin = (user) => {
-        localStorage.setItem("isLogin", "true");
-        localStorage.setItem("userInfo", JSON.stringify(user));
-        props.handleLogin("true");
+        props.handleLogin(user);
         if (user.role === "student") {
             navigate(`/student/${user._id}`)
         } else {
@@ -40,7 +38,7 @@ const Login = (props) => {
         if (loginField.email.trim() === "" || loginField.password.trim() === "") return toast.error("Please enter the credentials");
         props.showLoader();
 
-        await axios.post('http://localhost:4000/api/auth/login', loginField, { withCredentials: true }).then(resp => {
+        await axios.post('/api/auth/login', loginField, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             saveLogin(resp.data.user)
         }).catch(err => {
@@ -53,8 +51,9 @@ const Login = (props) => {
 
     const handleRegister = async () => {
         if (registerField.name.trim() === "" || registerField.email.trim() === "" || registerField.password.trim() === "" || registerField.roll.trim() === "") return toast.error("Please enter all the details");
+        if (registerField.password.length < 8) return toast.error("Use a password with at least 8 characters");
         props.showLoader();
-        await axios.post('http://localhost:4000/api/auth/register', registerField, { withCredentials: true }).then(resp => {
+        await axios.post('/api/auth/register', registerField, { withCredentials: true }).then(resp => {
             toast.success(resp.data.message)
             saveLogin(resp.data.user)
         }).catch(err => {
@@ -78,12 +77,12 @@ const Login = (props) => {
             </div>
 
             <div className='signup-page-card'>
-                <div className='card-header-form'>Register</div>
+                <div className='card-header-form'>Student sign up</div>
                 <div className='form-input-fields'>
 
                     <input className='form-input' type='text' placeholder='Name' value={registerField.name} onChange={(event) => handleOnChange(event, "name", "register")} />
                     <input className='form-input' type='email' placeholder='Email' value={registerField.email} onChange={(event) => handleOnChange(event, "email", "register")} />
-                    <input className='form-input' type='password' placeholder='Password' value={registerField.password} onChange={(event) => handleOnChange(event, "password", "register")} />
+                    <input className='form-input' type='password' minLength={8} autoComplete='new-password' placeholder='Password (8 characters minimum)' value={registerField.password} onChange={(event) => handleOnChange(event, "password", "register")} />
                     <input className='form-input' type='text' placeholder='Roll No.' value={registerField.roll} onChange={(event) => handleOnChange(event, "roll", "register")} />
                     <div className='form-btn' onClick={handleRegister}>Register</div>
                 </div>

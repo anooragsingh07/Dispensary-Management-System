@@ -16,14 +16,15 @@ const AdminDashboard = (props) => {
     }
   }
 
-  let userInfo = localStorage.getItem("userInfo") ? JSON.parse(localStorage.getItem("userInfo")) : null;
+  const userInfo = props.user;
+  const isAdministrator = userInfo?.role === 'admin';
   return (
     <div className='adminDashboard'>
       <div className='welcome-header'>
         <div className='welcome-admin'>Welcome, {userInfo?.name || "Admin"}</div>
         <div className='welcome-admin-right-side'>
-          <div className='manage-staff-btn' onClick={() => openCloseModal("staff")}>Manage Staff</div>
-          <div className='manage-staff-btn' onClick={() => openCloseModal("event")}>Manage Events</div>
+          {isAdministrator && <div className='manage-staff-btn' onClick={() => openCloseModal("staff")}>Manage Staff</div>}
+          {isAdministrator && <div className='manage-staff-btn' onClick={() => openCloseModal("event")}>Manage Events</div>}
         </div>
       </div>
 
