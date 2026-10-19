@@ -1,5 +1,7 @@
 const User = require('../Models/user');
 const Student = require('../Models/student');
+const AuditLog = require('../Models/auditLog');
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { getJwtSecret } = require('../Authentication/auth');
@@ -135,7 +137,7 @@ exports.login = async (req, res) => {
         if (!email || !password || !isEmail(email)) return invalidCredentials(res);
 
         const user = await User.findOne({ email }).select('+password').populate('studentId');
-        if (!user || !(await bcrypt.compare(password, user.password))) return invalidCredentials(res);
+        if (!user || user.isActive === false || !(await bcrypt.compare(password, user.password))) return invalidCredentials(res);
 
         setAuthCookie(res, user);
         return res.status(200).json({ message: 'Signed in successfully', user: sanitizeUser(user) });
@@ -149,7 +151,7 @@ exports.getCurrentUser = (req, res) => res.status(200).json({ user: sanitizeUser
 
 exports.updateStudentById = async (req, res) => {
     try {
-        const student = await Student.findById(req.params.id);
+        const student = await Student.findOne({ _id: req.params.id, deletedAt: null });
         if (!student) return res.status(404).json({ error: 'Student not found' });
         const user = await User.findOne({ studentId: student._id });
         if (!user) return res.status(404).json({ error: 'Student login account not found' });
@@ -180,10 +182,46 @@ exports.updateStudentById = async (req, res) => {
     }
 };
 
+exports.deleteStudentByStaff = async (req, res) => {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Enter a valid student ID' });
+
+    let student;
+    let user;
+    let studentSaved = false;
+    let userSaved = false;
+    const deletedAt = new Date();
+    try {
+        student = await Student.findOne({ _id: req.params.id, deletedAt: null });
+        if (!student) return res.status(404).json({ error: 'Student not found' });
+        user = await User.findOne({ studentId: student._id, role: 'student' });
+        if (!user) return res.status(404).json({ error: 'Student login account not found' });
+
+        const previousAuthVersion = user.authVersion || 0;
+        student.deletedAt = deletedAt;
+        await student.save();
+        studentSaved = true;
+
+        user.isActive = false;
+        user.authVersion = previousAuthVersion + 1;
+        await user.save();
+        userSaved = true;
+
+        await AuditLog.create({ actorId: req.user._id, action: 'student.deleted', studentId: student._id });
+        return res.status(200).json({ message: 'Student account deactivated and profile archived. Medical history was retained.' });
+    } catch (error) {
+        const rollback = [];
+        if (studentSaved) rollback.push(Student.updateOne({ _id: student._id, deletedAt }, { $set: { deletedAt: null } }));
+        if (userSaved) rollback.push(User.updateOne({ _id: user._id, isActive: false }, { $set: { isActive: true, authVersion: user.authVersion - 1 } }));
+        await Promise.allSettled(rollback);
+        console.error('Student deletion failed:', error);
+        return res.status(500).json({ error: 'Unable to delete this student right now' });
+    }
+};
+
 exports.getStudentByRollNo = async (req, res) => {
     try {
         const roll = normalizeRoll(req.params.roll);
-        const student = await Student.findOne({ roll });
+        const student = await Student.findOne({ roll, deletedAt: null });
         if (!student) return res.status(404).json({ error: 'Student not found' });
         const user = await User.findOne({ studentId: student._id }).select('email');
         if (!user) return res.status(404).json({ error: 'Student login account not found' });

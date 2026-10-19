@@ -10,6 +10,7 @@ const studentSchema = new mongoose.Schema({
     previous_health: { type: String, default: '', trim: true, maxlength: 2000 },
     age: { type: Number, min: 1, max: 130 },
     bloodGroup: { type: String, default: '', trim: true, enum: ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] },
+    deletedAt: { type: Date, default: null },
 }, { timestamps: true, collection: 'students' });
 
 module.exports = mongoose.model('student', studentSchema);

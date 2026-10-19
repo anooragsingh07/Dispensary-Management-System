@@ -16,6 +16,7 @@ router.delete('/delete-staff/:id', Authentication.adminAuth, UserController.dele
 
 router.post('/register-student', Authentication.adminFacultyAuth, UserController.registerStudentByStaff);
 router.put('/update-student/:id', Authentication.adminFacultyAuth, UserController.updateStudentById);
+router.delete('/delete-student/:id', Authentication.adminFacultyAuth, UserController.deleteStudentByStaff);
 router.get('/get-student/:roll', Authentication.adminFacultyAuth, UserController.getStudentByRollNo);
 
 module.exports = router;

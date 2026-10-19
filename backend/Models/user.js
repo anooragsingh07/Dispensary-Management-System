@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema({
     // Student profile data lives in students; staff/admin display names live here.
     name: { type: String, trim: true, maxlength: 120 },
     role: { type: String, enum: ['admin', 'doctor', 'staff', 'student'], default: 'student', required: true },
+    isActive: { type: Boolean, default: true },
     authVersion: { type: Number, default: 0 },
     // Email is the authentication identifier. Student profile data is linked by studentId.
     email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
