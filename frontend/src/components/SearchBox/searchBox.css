@@ -1,4 +1,4 @@
 .page-searchBox { width: 100%; max-width: 680px; display: flex; align-items: center; gap: 9px; position: relative; padding: 0; border: 0; background: transparent; box-shadow: none; }
-.input-box { min-height: 44px; flex: 1; border: 1px solid var(--border-strong); border-radius: 0; padding: 10px 13px; background: var(--surface-input); color: var(--ink); font-size: 13px; }
+.input-box { min-height: 44px; flex: 1; border: 1px solid var(--border-strong); border-radius: var(--control-radius); padding: 10px 13px; background: var(--surface-input); color: var(--ink); font-size: 13px; }
 .search-btn { width: 44px; min-height: 44px; flex: 0 0 auto; border: 1px solid var(--brand); border-radius: 6px; padding: 0; background: var(--brand); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .search-btn:hover { border-color: var(--brand-hover); background: var(--brand-hover); }

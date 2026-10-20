@@ -16,9 +16,10 @@
   --surface-soft: #f4f4f4;
   --surface-input: #efefef;
   --border: #dedfe3;
-  --border-strong: #9ca3af;
+  --border-strong: #767676;
   --success: #15803d;
   --radius: 8px;
+  --control-radius: 8px;
   --content-width: 1180px;
 }
 

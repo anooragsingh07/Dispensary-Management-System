@@ -1,49 +1,44 @@
 .login-page {
-  width: min(100% - 48px, 1180px);
-  display: grid;
-  grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr);
-  align-items: center;
-  gap: 54px;
+  width: min(100% - 48px, 1120px);
+  min-height: 68vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
   margin: 0 auto;
-  padding: 62px 0 76px;
+  padding: 54px 0 72px;
 }
 
-.login-intro { max-width: 440px; }
-.login-intro .eyebrow { margin-bottom: 18px; }
-.login-intro h1 { margin: 0; color: #14151a; font-size: clamp(42px, 5vw, 60px); font-weight: 700; letter-spacing: -.075em; line-height: 1.02; }
-.login-intro h1 span { color: var(--brand); }
-.login-intro > p:not(.eyebrow) { margin: 21px 0 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
-.login-intro-note { display: flex; align-items: flex-start; gap: 12px; margin-top: 36px; border-top: 1px solid var(--border); padding-top: 20px; }
-.login-intro-note > span:first-child { width: 32px; height: 32px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 7px; background: #e9e9ff; color: var(--brand); }
-.login-intro-note .MuiSvgIcon-root { font-size: 18px; }
-.login-intro-note > span:last-child { display: grid; gap: 5px; }
-.login-intro-note strong { color: #242833; font-size: 12px; }
-.login-intro-note small { color: var(--muted); font-size: 11px; line-height: 1.6; }
+.auth-page-heading { width: min(100%, 960px); margin: 0 auto; text-align: center; }
+.auth-page-heading .eyebrow { justify-content: center; margin: 0 0 12px; }
+.auth-page-heading h1 { margin: 0; color: var(--ink); font-size: clamp(28px, 4vw, 42px); font-weight: 700; letter-spacing: -.065em; line-height: 1.1; }
+.auth-page-heading > p:last-child { margin: 10px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
 
-.login-cards { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: start; gap: 14px; }
+.login-cards { width: min(100%, 960px); display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); align-items: start; gap: 16px; margin: 0 auto; }
 .login-page-card,
-.signup-page-card { min-width: 0; border: 1px solid var(--border); border-radius: 9px; padding: 22px; background: #fff; box-shadow: none; }
-.auth-card-heading { display: flex; align-items: flex-start; gap: 11px; border-bottom: 1px solid #ececef; padding-bottom: 16px; }
-.auth-card-step { width: 27px; height: 27px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 6px; background: #ededff; color: var(--brand); font-size: 10px; font-weight: 700; }
-.auth-card-heading h2 { margin: 0; color: #1d2028; font-size: 17px; font-weight: 650; letter-spacing: -.04em; }
-.auth-card-heading p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
-.form-input-fields { width: 100%; display: flex; flex-direction: column; gap: 14px; margin: 18px 0; }
-.auth-field { display: grid; gap: 7px; color: #3d4552; font-size: 11px; font-weight: 600; }
-.auth-field .form-input { width: 100%; min-height: 43px; padding: 10px 11px; font-size: 12px; font-weight: 400; }
-.form-btn { width: 100%; min-height: 43px; justify-content: space-between; border-radius: 6px; font-size: 12px; }
-.auth-card-footnote { margin: 13px 0 0; color: #747c88; font-size: 10px; line-height: 1.6; }
+.signup-page-card { min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 28px; background: #fff; box-shadow: none; }
+.auth-card-heading { display: flex; align-items: flex-start; gap: 12px; border-bottom: 1px solid #ececef; padding-bottom: 17px; }
+.auth-card-step { width: 30px; height: 30px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 6px; background: #ededff; color: var(--brand); font-size: 11px; font-weight: 700; }
+.auth-card-heading h2 { margin: 0; color: #1d2028; font-size: 19px; font-weight: 650; letter-spacing: -.045em; }
+.auth-card-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.auth-account-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 18px; border: 1px solid var(--border); border-radius: 7px; padding: 4px; background: var(--surface-soft); }
+.auth-account-switch button { min-height: 37px; border: 1px solid transparent; border-radius: 5px; padding: 7px 10px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
+.auth-account-switch button:hover { color: var(--brand); }
+.auth-account-switch button.selected { border-color: var(--border); background: #fff; color: var(--brand); box-shadow: 0 1px 2px rgb(17 24 39 / 6%); }
+.form-input-fields { width: 100%; display: flex; flex-direction: column; gap: 15px; margin: 18px 0; }
+.auth-field { display: grid; gap: 7px; color: #3d4552; font-size: 12px; font-weight: 600; }
+.auth-field .form-input { width: 100%; min-height: 48px; border-radius: var(--control-radius); padding: 11px 13px; font-size: 14px; font-weight: 400; }
+.form-btn { width: 100%; min-height: 48px; justify-content: space-between; border-radius: var(--radius); padding-inline: 15px; font-size: 14px; }
+.auth-card-footnote { display: flex; align-items: flex-start; gap: 7px; margin: 14px 0 0; color: #747c88; font-size: 11px; line-height: 1.6; }
+.auth-card-footnote .MuiSvgIcon-root { flex: 0 0 auto; color: var(--brand); font-size: 15px; }
 
-@media (max-width: 960px) {
-  .login-page { grid-template-columns: 1fr; gap: 34px; padding-top: 44px; }
-  .login-intro { max-width: 700px; }
-  .login-intro h1 br { display: none; }
-  .login-intro-note { max-width: 420px; margin-top: 22px; }
+@media (max-width: 720px) {
+  .login-page { width: min(100% - 32px, 560px); min-height: 0; gap: 22px; padding: 35px 0 50px; }
+  .login-cards { grid-template-columns: 1fr; gap: 12px; }
+  .login-page-card, .signup-page-card { padding: 20px; }
+  .auth-page-heading h1 { font-size: 31px; }
 }
 
-@media (max-width: 620px) {
-  .login-page { width: min(100% - 32px, 1180px); gap: 25px; padding: 32px 0 48px; }
-  .login-intro h1 { font-size: 43px; }
-  .login-cards { grid-template-columns: 1fr; }
-  .login-page-card,
-  .signup-page-card { padding: 18px; }
+@media (max-width: 380px) {
+  .auth-account-switch button { padding-inline: 6px; font-size: 11px; }
 }
