@@ -6,6 +6,7 @@ const Authentication = require('../Authentication/auth');
 router.post('/register', UserController.register);
 router.post('/login', UserController.login);
 router.get('/me', Authentication.authenticate, UserController.getCurrentUser);
+router.post('/change-password', Authentication.authenticate, UserController.changePassword);
 router.post('/logout', Authentication.authenticate, UserController.logout);
 
 router.get('/get-staffs', UserController.getAllStaffs);

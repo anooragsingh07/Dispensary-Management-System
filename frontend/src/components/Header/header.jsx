@@ -86,6 +86,7 @@ const Header = ({ isLogin, user, showLoader, hideLoader, handleLogin }) => {
                   <span className="user-avatar">{initials}</span>
                   <span className="header-user-name">{user?.name}</span>
                 </Link>
+                <Link to="/account/password" className="header-change-password">Change password</Link>
                 <button type="button" onClick={handleLogout} className="header-signin header-signout">Sign out</button>
               </div> : <Link to="/login" className="header-signin">Sign in</Link>}
             </div>

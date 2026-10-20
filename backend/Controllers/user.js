@@ -155,6 +155,39 @@ exports.login = async (req, res) => {
 
 exports.getCurrentUser = (req, res) => res.status(200).json({ user: sanitizeUser(req.user) });
 
+exports.changePassword = async (req, res) => {
+    try {
+        const currentPassword = String(req.body.currentPassword || '');
+        const newPassword = String(req.body.newPassword || '');
+        const confirmPassword = String(req.body.confirmPassword || '');
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({ error: 'Enter your current password and complete both new-password fields' });
+        }
+        if (newPassword.length < 8 || newPassword.length > 128) {
+            return res.status(400).json({ error: 'Your new password must be between 8 and 128 characters' });
+        }
+        if (newPassword !== confirmPassword) return res.status(400).json({ error: 'The new passwords do not match' });
+        if (newPassword === currentPassword) return res.status(400).json({ error: 'Choose a password different from your current one' });
+
+        const user = await User.findById(req.user._id).select('+password');
+        if (!user) return res.status(404).json({ error: 'Your account could not be found' });
+        if (!(await bcrypt.compare(currentPassword, user.password))) {
+            return res.status(400).json({ error: 'Your current password is incorrect' });
+        }
+
+        user.password = await bcrypt.hash(newPassword, 12);
+        user.authVersion = (user.authVersion || 0) + 1;
+        await user.save();
+        setAuthCookie(res, user);
+
+        return res.status(200).json({ message: 'Your password has been changed successfully' });
+    } catch (error) {
+        console.error('Password change failed:', error);
+        return res.status(500).json({ error: 'Unable to change your password right now' });
+    }
+};
+
 exports.updateStudentById = async (req, res) => {
     try {
         const student = await Student.findById(req.params.id);

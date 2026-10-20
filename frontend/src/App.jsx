@@ -15,6 +15,7 @@ import Facility from './pages/Admin/Facility/facility';
 import NearByHospital from './pages/Admin/NearByHospital/nearByHospital';
 import AdminGallary from './pages/Admin/Gallary/adminGallary';
 import StudentDashboard from './pages/Student/studentDashboard';
+import ChangePassword from './pages/Account/ChangePassword/changePassword';
 import GlobalLoader from './components/GlobalLoader/globalLoader';
 
 const AccessRoute = ({ loading, allowed, children }) => {
@@ -73,6 +74,7 @@ function App() {
       <Routes>
         <Route path="/" element={patientLanding} />
         <Route path="/login" element={checkingSession ? null : user ? <Navigate to={dashboardPath} replace /> : <Login handleLogin={handleLogin} showLoader={showLoader} hideLoader={hideLoader} />} />
+        <Route path="/account/password" element={<AccessRoute loading={checkingSession} allowed={Boolean(user)}><ChangePassword user={user} showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
         <Route path="/stock" element={stockPage} />
         <Route path="/admin/dashboard" element={<AccessRoute loading={checkingSession} allowed={isClinical}><AdminDashboard user={user} showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
         <Route path="/admin/register-student" element={<AccessRoute loading={checkingSession} allowed={isClinical}><RegisterStudent showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
