@@ -1,10 +1,10 @@
 .student-dashboard { padding-top: 58px; }
 .student-page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--border); padding-bottom: 32px; }
 .student-page-heading .eyebrow { margin-bottom: 13px; }
-.student-page-heading h1 { margin: 0; color: #17191f; font-size: clamp(32px, 4vw, 48px); font-weight: 700; letter-spacing: -.065em; }
+.student-page-heading h1 { margin: 0; color: var(--navy); font-size: clamp(32px, 4vw, 48px); font-weight: 700; letter-spacing: -.065em; }
 .student-page-heading > div:first-child > p:last-child { margin: 11px 0 0; color: var(--muted); font-size: 13px; }
 .student-identity-card { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; background: #fff; }
-.student-avatar { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 50%; background: #ededff; color: var(--brand); font-size: 11px; font-weight: 700; }
+.student-avatar { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--brand) 10%, white); color: var(--brand); font-size: 11px; font-weight: 700; }
 .student-identity-card > span:last-child { display: grid; gap: 4px; }
 .student-identity-card strong { max-width: 180px; overflow: hidden; color: #272a33; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .student-identity-card small { color: var(--muted); font-size: 10px; }
@@ -13,6 +13,10 @@
 .student-visits-heading .eyebrow { margin-bottom: 7px; font-size: 9px; }
 .student-visits-heading h2 { margin: 0; color: #22252d; font-size: 18px; font-weight: 650; letter-spacing: -.04em; }
 .student-record-count { border: 1px solid var(--border); border-radius: 999px; padding: 6px 10px; color: #596171; font-size: 10px; }
+.student-upcoming-followup { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 14px 22px 0; border: 1px solid color-mix(in srgb, var(--brand) 28%, white); border-radius: 8px; padding: 12px 14px; background: color-mix(in srgb, var(--brand) 5%, white); color: var(--ink); font-size: 12px; }
+.student-upcoming-followup strong { color: var(--brand); }
+.student-upcoming-followup time { font-weight: 650; }
+.student-upcoming-followup span { color: var(--muted); }
 .student-visits-list { display: grid; }
 .student-visit-row { min-height: 72px; display: flex; align-items: center; gap: 13px; padding: 13px 22px; }
 .student-visit-row + .student-visit-row { border-top: 1px solid #f0f0f2; }
@@ -49,6 +53,7 @@
   .student-visit-row time { margin-left: 47px; }
   .visit-view-button { margin-left: auto; }
   .student-visits-heading { padding: 16px; }
+  .student-upcoming-followup { margin-inline: 13px; }
   .student-profile-card { padding: 15px; }
   .student-profile-facts { grid-template-columns: 1fr; }
   .student-profile-wide { grid-column: auto; }

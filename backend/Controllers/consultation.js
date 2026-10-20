@@ -184,7 +184,7 @@ exports.getMyConsultations = async (req, res) => {
         const studentId = req.user.studentId?._id || req.user.studentId;
         if (!studentId) return res.status(403).json({ error: 'Your account is not linked to a patient profile' });
         // The authenticated account determines studentId. Never accept an ID from the request here.
-        const consultations = await Consultation.find({ studentId }).select('-clinicalNotes').populate('doctorId', 'name designation').sort({ visitAt: 1 }).lean();
+        const consultations = await Consultation.find({ studentId }).select('-clinicalNotes').populate('doctorId', 'name designation').sort({ visitAt: -1 }).lean();
         const ids = consultations.map((visit) => visit._id);
         const prescriptions = await Prescription.find({ consultationId: { $in: ids } }).select('-__v').sort({ createdAt: 1 }).lean();
         const byConsultation = new Map();

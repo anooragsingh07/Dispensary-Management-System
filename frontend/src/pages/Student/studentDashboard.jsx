@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './studentDashboard.css';
 import RemoveRedEyeOutlinedIcon from '@mui/icons-material/RemoveRedEyeOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
@@ -14,23 +14,25 @@ const formatDate = (value) => new Date(value).toLocaleDateString('en-IN', {
 });
 
 const StudentDashboard = (props) => {
+  const { showLoader, hideLoader } = props;
   const userInfo = props.user;
   const isEmployee = userInfo?.role === 'employee' || userInfo?.recordType === 'employee';
   const campusId = isEmployee ? userInfo?.employeeId || userInfo?.roll : userInfo?.roll;
   const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [selectedHistory, setSelectedHistory] = useState(null);
   const [modal, setModal] = useState(false);
 
-  const fetchData = async () => {
-    props.showLoader();
+  const fetchData = useCallback(async () => {
+    showLoader();
     await axios.get('/api/consultations/mine').then((resp) => {
       setHistory(resp.data.consultations || []);
     }).catch((err) => {
       toast.error(err?.response?.data?.error || 'Unable to load your visit history');
-    }).finally(() => props.hideLoader());
-  };
+    }).finally(() => { hideLoader(); setHistoryLoading(false); });
+  }, [hideLoader, showLoader]);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const openHistory = (item) => {
     setSelectedHistory(item);
@@ -43,6 +45,9 @@ const StudentDashboard = (props) => {
   };
 
   const initials = String(userInfo?.name || 'Student').split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase();
+  const upcomingFollowUp = history
+    .filter((visit) => visit.followUpAt && new Date(visit.followUpAt).getTime() >= new Date().setHours(0, 0, 0, 0))
+    .sort((a, b) => new Date(a.followUpAt) - new Date(b.followUpAt))[0];
 
   return (
     <main className="student-dashboard">
@@ -59,8 +64,9 @@ const StudentDashboard = (props) => {
       </header>
 
       <section className="student-visits">
-        <div className="student-visits-heading"><div><p className="eyebrow">YOUR RECORDS</p><h2>Medical history</h2></div><span className="student-record-count">{history.length} {history.length === 1 ? 'record' : 'records'}</span></div>
-        {history.length > 0 ? <div className="student-visits-list">
+        <div className="student-visits-heading"><div><p className="eyebrow">YOUR RECORDS</p><h2>Medical history</h2></div><span className="student-record-count">{historyLoading ? 'Loading…' : `${history.length} ${history.length === 1 ? 'record' : 'records'}`}</span></div>
+        {upcomingFollowUp && <div className="student-upcoming-followup"><strong>Upcoming follow-up</strong><time dateTime={upcomingFollowUp.followUpAt}>{formatDate(upcomingFollowUp.followUpAt)}</time><span>{upcomingFollowUp.chiefComplaint || 'Consultation follow-up'}</span></div>}
+        {historyLoading ? <div className="student-empty-state" role="status">Loading your visit history…</div> : history.length > 0 ? <div className="student-visits-list">
           {history.map((item) => <article className="student-visit-row" key={item._id}>
             <span className="visit-date-icon"><MedicalServicesOutlinedIcon /></span>
             <span className="visit-row-copy"><strong>{item.chiefComplaint || 'Dispensary consultation'}</strong><small>{item.diagnosis || 'Assessment not recorded'} · {item.prescriptions?.length || 0} prescribed</small></span>

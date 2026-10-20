@@ -17,6 +17,8 @@ import './home.css';
 const Home = ({ showLoader, hideLoader, user }) => {
   const [page, setPage] = useState('About');
   const dashboardPath = ['student', 'employee'].includes(user?.role) ? '/student/' + user._id : '/admin/dashboard';
+  const canViewStock = ['admin', 'doctor', 'staff'].includes(user?.role);
+  const stockLink = canViewStock ? '/stock' : '/login';
   const sections = [
     { key: 'About', label: 'About the centre', icon: <HomeOutlinedIcon /> },
     { key: 'Staff', label: 'Staff directory', icon: <PeopleAltOutlinedIcon /> },
@@ -48,7 +50,7 @@ const Home = ({ showLoader, hideLoader, user }) => {
           <h1>Care that keeps<br /><span>campus moving.</span></h1>
           <p className="hero-description">Find the people, medicine and support you need, all in one simple place. Your campus health centre is here for you.</p>
           <div className="hero-actions">
-            <Link to="/stock" className="button-primary">Browse medicine stock <ArrowForwardRoundedIcon fontSize="small" /></Link>
+            {canViewStock && <Link to={stockLink} className="button-primary">Browse medicine stock <ArrowForwardRoundedIcon fontSize="small" /></Link>}
             <Link to={user ? dashboardPath : '/login'} className="button-secondary">{user ? 'Open your workspace' : 'Student sign in'}</Link>
           </div>
           <div className="hero-assurance"><span className="assurance-check">✓</span> Clear health-centre information, whenever you need it.</div>
@@ -58,7 +60,7 @@ const Home = ({ showLoader, hideLoader, user }) => {
           <div className="preview-topline"><span className="preview-mark"><LocalHospitalOutlinedIcon /></span><span>Campus care portal</span><span className="preview-status"><i /> Ready to help</span></div>
           <div className="preview-heading"><p className="preview-kicker">YOUR HEALTH CENTRE</p><h2>Everything in<br />one place.</h2><p>Support for every campus day.</p></div>
           <div className="preview-links">
-            <Link to="/stock" className="preview-link"><span className="preview-link-icon"><Inventory2OutlinedIcon /></span><span><strong>Medicine stock</strong><small>Check current availability</small></span><ArrowForwardRoundedIcon /></Link>
+            {canViewStock && <Link to={stockLink} className="preview-link"><span className="preview-link-icon"><Inventory2OutlinedIcon /></span><span><strong>Medicine stock</strong><small>Check current availability</small></span><ArrowForwardRoundedIcon /></Link>}
             <button type="button" className="preview-link preview-link-button" onClick={openCareTeam} aria-label="View the health-centre care team">
               <span className="preview-link-icon preview-link-muted"><PeopleAltOutlinedIcon /></span>
               <span><strong>Care team</strong><small>Meet your health-centre staff</small></span>

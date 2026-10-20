@@ -1,9 +1,9 @@
 .stock-page { display: flex; flex-direction: column; gap: 20px; }
 .stock-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--border); padding-bottom: 25px; }
 .stock-heading .eyebrow { margin-bottom: 10px; }
-.stock-heading h1 { margin: 0; color: #17191f; font-size: clamp(32px, 4vw, 44px); font-weight: 700; letter-spacing: -.065em; }
+.stock-heading h1 { margin: 0; color: var(--navy); font-size: clamp(32px, 4vw, 44px); font-weight: 700; letter-spacing: -.065em; }
 .stock-heading > div > p:last-child { margin: 9px 0 0; color: var(--muted); font-size: 13px; }
-.stock-heading-icon { width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid #deddf6; border-radius: 9px; background: #ededff; color: var(--brand); }
+.stock-heading-icon { width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid #deddf6; border-radius: 9px; background: color-mix(in srgb, var(--brand) 10%, white); color: var(--brand); }
 .stock-heading-icon .MuiSvgIcon-root { font-size: 22px; }
 .stock-page-card { width: 100%; }
 

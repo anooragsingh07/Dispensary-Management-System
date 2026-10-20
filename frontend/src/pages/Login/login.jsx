@@ -11,6 +11,7 @@ const Login = (props) => {
   const [loginField, setLoginField] = useState({ email: '', password: '' });
   const [registerField, setRegisterField] = useState({ name: '', email: '', password: '', roll: '', employeeId: '' });
   const [accountType, setAccountType] = useState('student');
+  const [authMode, setAuthMode] = useState('login');
 
   const handleOnChange = (event, key, card) => {
     if (card === 'login') setLoginField({ ...loginField, [key]: event.target.value });
@@ -56,20 +57,25 @@ const Login = (props) => {
         <p>Sign in or create an account to access campus health services.</p>
       </header>
 
-      <section className="login-cards" aria-label="Account access">
-        <form className="login-page-card" onSubmit={(event) => { event.preventDefault(); handleLogin(); }}>
-          <div className="auth-card-heading"><span className="auth-card-step">01</span><div><h2>Welcome back</h2><p>Sign in to your account.</p></div></div>
-          <div className="form-input-fields">
-            <label className="auth-field"><span>Email address</span><input className="form-input" type="email" autoComplete="username" placeholder="you@college.edu" value={loginField.email} onChange={(event) => handleOnChange(event, 'email', 'login')} required /></label>
-            <label className="auth-field"><span>Password</span><input className="form-input" type="password" autoComplete="current-password" placeholder="Enter your password" value={loginField.password} onChange={(event) => handleOnChange(event, 'password', 'login')} required /></label>
-          </div>
-          <button className="form-btn" type="submit">Sign in <ArrowForwardRoundedIcon fontSize="small" /></button>
-          <p className="auth-card-footnote"><LockOutlinedIcon fontSize="small" /> For students, college employees and authorized dispensary staff.</p>
-        </form>
-
-        <form className="signup-page-card" onSubmit={(event) => { event.preventDefault(); handleRegister(); }}>
-          <div className="auth-card-heading"><span className="auth-card-step">02</span><div><h2>New to the centre?</h2><p>Create your campus health account.</p></div></div>
-          <div className="auth-account-switch" role="group" aria-label="Choose account type">
+      <section className="auth-single-card" aria-label="Account access">
+        <div className="auth-mode-switch" role="tablist" aria-label="Account action">
+          <button id="auth-tab-login" type="button" role="tab" aria-selected={authMode === 'login'} className={authMode === 'login' ? 'selected' : ''} onClick={() => setAuthMode('login')}>Sign in</button>
+          <button id="auth-tab-register" type="button" role="tab" aria-selected={authMode === 'register'} className={authMode === 'register' ? 'selected' : ''} onClick={() => setAuthMode('register')}>Create account</button>
+        </div>
+        {authMode === 'login' ? (
+          <form role="tabpanel" aria-labelledby="auth-tab-login" onSubmit={(event) => { event.preventDefault(); handleLogin(); }}>
+            <div className="auth-card-heading"><div><h2>Welcome back</h2><p>Sign in to your account.</p></div></div>
+            <div className="form-input-fields">
+              <label className="auth-field"><span>Email address</span><input className="form-input" type="email" autoComplete="username" placeholder="you@college.edu" value={loginField.email} onChange={(event) => handleOnChange(event, 'email', 'login')} required /></label>
+              <label className="auth-field"><span>Password</span><input className="form-input" type="password" autoComplete="current-password" placeholder="Enter your password" value={loginField.password} onChange={(event) => handleOnChange(event, 'password', 'login')} required /></label>
+            </div>
+            <button className="form-btn" type="submit">Sign in <ArrowForwardRoundedIcon fontSize="small" /></button>
+            <p className="auth-card-footnote"><LockOutlinedIcon fontSize="small" /> For students, college employees and authorized dispensary staff.</p>
+          </form>
+        ) : (
+          <form role="tabpanel" aria-labelledby="auth-tab-register" onSubmit={(event) => { event.preventDefault(); handleRegister(); }}>
+            <div className="auth-card-heading"><div><h2>New to the centre?</h2><p>Create your campus health account.</p></div></div>
+            <div className="auth-account-switch" role="group" aria-label="Choose account type">
             <button type="button" className={accountType === 'student' ? 'selected' : ''} aria-pressed={accountType === 'student'} onClick={() => setAccountType('student')}>Student</button>
             <button type="button" className={accountType === 'employee' ? 'selected' : ''} aria-pressed={accountType === 'employee'} onClick={() => setAccountType('employee')}>College employee</button>
           </div>
@@ -83,7 +89,8 @@ const Login = (props) => {
           </div>
           <button className="form-btn" type="submit">Create {accountType === 'employee' ? 'employee' : 'student'} account <ArrowForwardRoundedIcon fontSize="small" /></button>
           <p className="auth-card-footnote">Use your college-issued {accountType === 'employee' ? 'employee ID' : 'student roll number'}. Dispensary staff accounts are set up by an administrator.</p>
-        </form>
+          </form>
+        )}
       </section>
       <ToastContainer />
     </main>

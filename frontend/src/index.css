@@ -2,23 +2,24 @@
 
 :root {
   font-family: 'Inter', Arial, sans-serif;
-  color: #171717;
-  background: #f4f4f4;
+  color: #1F2937;
+  background: #F5F7FA;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --brand: #0000ee;
-  --brand-hover: #0000bd;
-  --ink: #171717;
-  --muted: #5b6472;
+  --brand: #0F766E;
+  --brand-hover: #115E59;
+  --navy: #16324F;
+  --ink: #1F2937;
+  --muted: #5B6472;
   --surface: #ffffff;
-  --surface-soft: #f4f4f4;
-  --surface-input: #efefef;
-  --border: #dedfe3;
-  --border-strong: #767676;
+  --surface-soft: #F5F7FA;
+  --surface-input: #FFFFFF;
+  --border: #DDE4EC;
+  --border-strong: #AAB6C4;
   --success: #15803d;
-  --radius: 8px;
+  --radius: 12px;
   --control-radius: 8px;
   --content-width: 1180px;
 }
@@ -29,5 +30,5 @@ body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--surface
 button, input, textarea, select { font: inherit; }
 button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 a { color: var(--brand); }
-button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid rgb(0 0 238 / 22%); outline-offset: 2px; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid rgb(15 118 110 / 24%); outline-offset: 2px; }
 ::selection { color: #fff; background: var(--brand); }

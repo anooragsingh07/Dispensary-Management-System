@@ -79,7 +79,7 @@ input:focus,
 textarea:focus,
 select:focus {
   border-color: var(--brand);
-  outline: 3px solid rgb(0 0 238 / 12%);
+  outline: 3px solid rgb(15 118 110 / 14%);
   outline-offset: 1px;
 }
 
@@ -219,7 +219,7 @@ select:focus {
   box-shadow: none !important;
 }
 .MuiTable-root { background: #fff; }
-.MuiTableCell-head { background: #f4f4f4 !important; color: var(--ink) !important; font-size: 12px !important; font-weight: 700 !important; }
+.MuiTableCell-head { background: var(--surface-soft) !important; color: var(--ink) !important; font-size: 12px !important; font-weight: 700 !important; }
 .MuiTableCell-body { color: #333b49 !important; font-size: 13px !important; }
 .MuiTableRow-root:nth-of-type(odd) { background: #fff !important; }
 .MuiTableRow-root:hover { background: #f8f8fb !important; }
@@ -241,17 +241,17 @@ select:focus {
 .delete-icon { color: #596171; cursor: pointer; transition: color 140ms ease; }
 .delete-icon:hover { color: var(--brand); }
 .report-form-rows { gap: 10px; margin-top: 18px; }
-.report-form-header { border: 1px solid var(--border); border-radius: 6px; padding: 12px; background: #f4f4f4; color: #303542; box-shadow: none; font-size: 12px; font-weight: 650; }
+.report-form-header { border: 1px solid var(--border); border-radius: 6px; padding: 12px; background: var(--surface-soft); color: #303542; box-shadow: none; font-size: 12px; font-weight: 650; }
 .report-form-row-block { border: 1px solid var(--border); border-radius: 6px; padding: 12px; background: #fff; box-shadow: none; }
 .report-form-row { border-bottom: 1px solid #f0f0f2; padding: 8px 0; color: #424a58; font-size: 12px; }
 .report-form-row:last-child { border-bottom: 0; }
-.report-medicine-drpdown:hover { background: #ededff; color: var(--brand); }
+.report-medicine-drpdown:hover { background: color-mix(in srgb, var(--brand) 10%, white); color: var(--brand); }
 .report-dropdown { z-index: 2; border: 1px solid var(--border-strong); border-radius: var(--control-radius); box-shadow: none; }
 .modal-submit { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--brand); border-radius: 6px; padding: 0 15px; background: var(--brand); color: #fff; font-size: 13px; cursor: pointer; }
 .modal-submit:hover { border-color: var(--brand-hover); background: var(--brand-hover); }
 .student-modal-report { gap: 12px; color: #252832; font-size: 14px; }
-.student-modal-header { border: 1px solid var(--border); border-radius: 6px; background: #f4f4f4; color: #333a47; font-size: 12px; }
-.student-modal-body-header { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: #f4f4f4; color: #333a47; font-size: 12px; }
+.student-modal-header { border: 1px solid var(--border); border-radius: 6px; background: var(--surface-soft); color: #333a47; font-size: 12px; }
+.student-modal-body-header { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-soft); color: #333a47; font-size: 12px; }
 .student-modal-body-item { width: 100%; border: 1px solid var(--border); box-shadow: none; font-size: 12px; }
 .input-table { min-height: 34px; border: 1px solid var(--border-strong); padding: 5px; font-size: 12px; }
 .Toastify__toast { border: 1px solid var(--border); border-radius: 8px !important; font-family: 'Inter', Arial, sans-serif; font-size: 13px; }
@@ -284,7 +284,7 @@ select:focus {
   line-height: 1.4;
 }
 .input-box-register::placeholder { color: #737b88; opacity: 1; }
-.input-box-register:disabled { background: #f4f4f4; color: #717987; cursor: not-allowed; }
+.input-box-register:disabled { background: var(--surface-soft); color: #717987; cursor: not-allowed; }
 .input-box-register-textarea { min-height: 102px; resize: vertical; }
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -374,7 +374,7 @@ input:-webkit-autofill:focus {
 .record-date-block { align-items: flex-start; color: #4b5360; font-size: 13px; font-weight: 600; }
 .record-date-year { gap: 8px; }
 .record-year { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; padding: 0 12px; color: #454d59; font-size: 12px; cursor: pointer; }
-.record-year:hover { border-color: var(--brand); background: #f0f0ff; color: var(--brand); }
+.record-year:hover { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 8%, white); color: var(--brand); }
 .record-year.active-stats:hover { background: var(--brand); color: #fff; }
 .report-form-rows { gap: 10px; margin-top: 0; }
 .report-form-header,

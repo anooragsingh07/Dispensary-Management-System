@@ -12,6 +12,7 @@ const Header = ({ isLogin, user, showLoader, hideLoader, handleLogin }) => {
   const [helplinePopup, setHelplinePopup] = useState(false);
   const [events, setEvents] = useState([]);
   const isPatient = ['student', 'employee'].includes(user?.role);
+  const canViewStock = ['admin', 'doctor', 'staff'].includes(user?.role);
   const dashboardPath = isPatient ? '/student/' + user._id : '/admin/dashboard';
   const initials = String(user?.name || 'User')
     .split(/\s+/)
@@ -54,7 +55,7 @@ const Header = ({ isLogin, user, showLoader, hideLoader, handleLogin }) => {
             <div className="navbar-primary">
               {isPatient ? <NavLink to={dashboardPath} className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>My visits</NavLink> : <>
                 <NavLink to="/" end className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Overview</NavLink>
-                <NavLink to="/stock" className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Medicine stock</NavLink>
+                {canViewStock && <NavLink to="/stock" className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Medicine stock</NavLink>}
                 {isLogin && <NavLink to={dashboardPath} className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Workspace</NavLink>}
 
                 <div className="nav-popover-wrap" onMouseEnter={() => setEventPopup(true)} onMouseLeave={() => setEventPopup(false)}>

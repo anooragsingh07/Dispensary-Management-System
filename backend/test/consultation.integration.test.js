@@ -44,12 +44,17 @@ test('student and employee registration, campus-ID lookup, consultation, prescri
         const request = async (url, options = {}) => fetch(`${base}${url}`, { ...options, headers: { 'content-type': 'application/json', ...(options.headers || {}) } });
         const cookieFrom = (response) => response.headers.get('set-cookie')?.split(';')[0];
 
+        const publicStock = await request('/api/medicine/get');
+        assert.equal(publicStock.status, 401, 'medicine inventory must require authentication');
+
         const registration = await request('/api/auth/register', { method: 'POST', body: JSON.stringify({ name: 'Integration Student', roll, email, password: 'student-password-1', mobileNo: '9000000001', bloodGroup: 'B+' }) });
         assert.equal(registration.status, 201);
         const registrationBody = await registration.json();
         student = registrationBody.user.studentId;
         assert.ok(student);
         const studentCookie = cookieFrom(registration);
+        const studentStock = await request('/api/medicine/get', { headers: { cookie: studentCookie } });
+        assert.equal(studentStock.status, 403, 'students must not access dispensary stock');
 
         const missingEmployeeId = await request('/api/auth/register', { method: 'POST', body: JSON.stringify({ accountType: 'employee', name: 'Integration Employee', email: employeeEmail, password: 'employee-password-1' }) });
         assert.equal(missingEmployeeId.status, 400);
@@ -72,6 +77,12 @@ test('student and employee registration, campus-ID lookup, consultation, prescri
         const login = await request('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: doctor.email, password: 'integration-password-1' }) });
         assert.equal(login.status, 200);
         const doctorCookie = cookieFrom(login);
+        const careTeam = await request('/api/auth/get-staffs');
+        assert.equal(careTeam.status, 200);
+        const listedDoctor = (await careTeam.json()).staffs.find((member) => member.role === 'doctor');
+        assert.ok(listedDoctor);
+        assert.equal('email' in listedDoctor, false, 'public care-team listings must not expose staff email addresses');
+        assert.equal('mobileNo' in listedDoctor, false, 'public care-team listings must not expose staff phone numbers');
         const lookup = await request(`/api/auth/get-student/${roll}`, { headers: { cookie: doctorCookie } });
         assert.equal(lookup.status, 200);
         const foundStudent = (await lookup.json()).student;

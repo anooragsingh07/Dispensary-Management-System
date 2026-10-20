@@ -58,9 +58,7 @@ function App() {
   const patientLanding = checkingSession
     ? <div className="session-loading">Checking your session…</div>
     : isPatient ? <Navigate to={dashboardPath} replace /> : <Home showLoader={showLoader} hideLoader={hideLoader} user={user} />;
-  const stockPage = checkingSession
-    ? <div className="session-loading">Checking your session…</div>
-    : isPatient ? <Navigate to={dashboardPath} replace /> : <Stock showLoader={showLoader} hideLoader={hideLoader} />;
+  const stockPage = <AccessRoute loading={checkingSession} allowed={isClinical}><Stock showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>;
 
   return (
     <div className="App">

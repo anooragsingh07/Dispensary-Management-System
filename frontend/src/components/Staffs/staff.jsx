@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import './staff.css'
 import TableComp from '../Table/tableComp'
 import axios from '@/api/client'
 import { toast } from 'react-toastify';
-const Staff = (props) => {
-  const staffHeader = ["Name", "Designation", "Email Id", "Contact No."]
+const Staff = ({ showLoader, hideLoader }) => {
+  const staffHeader = ["Name", "Designation", "Role"]
 
   const [rowData, setRowData] = useState([])
 
@@ -13,27 +13,22 @@ const Staff = (props) => {
       return {
         name: item.name,
         designation: item.designation,
-        email: item.email,
-        mobileNo: item.mobileNo
+        role: item.role === 'doctor' ? 'Doctor' : 'Dispensary staff'
       }
     })
     setRowData(newarr);
   }
 
-  const fetchData = async () => {
-    props.showLoader();
+  const fetchData = useCallback(async () => {
+    showLoader();
     await axios.get('/api/auth/get-staffs').then(resp => {
       getFormattedData(resp.data.staffs || [])
     }).catch(err => {
       toast.error(err?.response?.data?.error || 'Unable to load the staff directory')
-    }).finally(() => {
-      props.hideLoader()
-    })
-  }
+    }).finally(() => hideLoader())
+  }, [hideLoader, showLoader]);
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  useEffect(() => { fetchData(); }, [fetchData]);
   return (
     <div className='staff'>
       <TableComp header={staffHeader} data={rowData} />

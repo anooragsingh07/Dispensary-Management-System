@@ -1,5 +1,5 @@
 .login-page {
-  width: min(100% - 48px, 1120px);
+  width: min(100% - 48px, 760px);
   min-height: 68vh;
   display: flex;
   flex-direction: column;
@@ -9,16 +9,17 @@
   padding: 54px 0 72px;
 }
 
-.auth-page-heading { width: min(100%, 960px); margin: 0 auto; text-align: center; }
+.auth-page-heading { width: min(100%, 680px); margin: 0 auto; text-align: center; }
 .auth-page-heading .eyebrow { justify-content: center; margin: 0 0 12px; }
 .auth-page-heading h1 { margin: 0; color: var(--ink); font-size: clamp(28px, 4vw, 42px); font-weight: 700; letter-spacing: -.065em; line-height: 1.1; }
 .auth-page-heading > p:last-child { margin: 10px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
 
-.login-cards { width: min(100%, 960px); display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); align-items: start; gap: 16px; margin: 0 auto; }
-.login-page-card,
-.signup-page-card { min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 28px; background: #fff; box-shadow: none; }
-.auth-card-heading { display: flex; align-items: flex-start; gap: 12px; border-bottom: 1px solid #ececef; padding-bottom: 17px; }
-.auth-card-step { width: 30px; height: 30px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 6px; background: #ededff; color: var(--brand); font-size: 11px; font-weight: 700; }
+.auth-single-card { width: min(100%, 540px); min-width: 0; margin: 0 auto; border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 28px 26px; background: #fff; box-shadow: none; }
+.auth-mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 22px; border: 1px solid var(--border); border-radius: 8px; padding: 4px; background: var(--surface-soft); }
+.auth-mode-switch button { min-height: 40px; border: 1px solid transparent; border-radius: 6px; padding: 8px 12px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; }
+.auth-mode-switch button:hover { color: var(--brand); }
+.auth-mode-switch button.selected { border-color: var(--border); background: #fff; color: var(--brand); box-shadow: 0 1px 2px rgb(17 24 39 / 6%); }
+.auth-card-heading { display: flex; align-items: flex-start; border-bottom: 1px solid #ececef; padding-bottom: 17px; }
 .auth-card-heading h2 { margin: 0; color: #1d2028; font-size: 19px; font-weight: 650; letter-spacing: -.045em; }
 .auth-card-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .auth-account-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 18px; border: 1px solid var(--border); border-radius: 7px; padding: 4px; background: var(--surface-soft); }
@@ -34,8 +35,7 @@
 
 @media (max-width: 720px) {
   .login-page { width: min(100% - 32px, 560px); min-height: 0; gap: 22px; padding: 35px 0 50px; }
-  .login-cards { grid-template-columns: 1fr; gap: 12px; }
-  .login-page-card, .signup-page-card { padding: 20px; }
+  .auth-single-card { padding: 18px 20px 22px; }
   .auth-page-heading h1 { font-size: 31px; }
 }
 

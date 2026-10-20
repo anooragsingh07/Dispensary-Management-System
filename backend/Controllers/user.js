@@ -313,7 +313,8 @@ exports.addStaffsByAdmin = async (req, res) => {
 
 exports.getAllStaffs = async (_req, res) => {
     try {
-        const staffs = await User.find({ role: { $in: ['staff', 'doctor'] } }).select('name designation email mobileNo role').sort({ name: 1 });
+        // The public care-team directory needs names and roles only. Personal contact details stay private.
+        const staffs = await User.find({ role: { $in: ['staff', 'doctor'] } }).select('name designation role').sort({ name: 1 });
         return res.status(200).json({ staffs });
     } catch (error) {
         console.error('Staff list failed:', error);
