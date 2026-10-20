@@ -1,8 +1,12 @@
 const { Pool } = require('pg');
 const crypto = require('crypto');
 
+if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL must be set before starting the backend.');
+}
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgres://campus_care:campus_care@127.0.0.1:5432/campus_care',
+    connectionString: process.env.DATABASE_URL,
     max: Number(process.env.PG_POOL_MAX) || 10,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
