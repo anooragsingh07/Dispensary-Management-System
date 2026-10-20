@@ -437,13 +437,19 @@ input:-webkit-autofill:focus {
 
 .modal,
 .addModal { z-index: 1000; align-items: center; padding: 20px 14px; background: rgb(17 24 39 / 42%); backdrop-filter: blur(2px); }
+.modal { overflow: hidden; overscroll-behavior: contain; }
 .modal-card,
 .addModal-card { width: min(100%, 640px); max-height: min(86vh, 800px); border-radius: 8px; padding: clamp(18px, 3vw, 26px); }
+.modal-card { display: flex; flex-direction: column; max-height: min(calc(100vh - 40px), 800px); max-height: min(calc(100dvh - 40px), 800px); overflow: hidden; }
 .modal-card-header { align-items: center; gap: 16px; }
 .modal-card-header-title { margin: 0; color: var(--ink); font-size: 20px; font-weight: 700; letter-spacing: -.035em; }
 .modal-close-button { width: 34px; height: 34px; display: inline-grid; flex: 0 0 auto; place-items: center; border: 0; border-radius: 6px; padding: 0; background: transparent; color: #606876; cursor: pointer; }
 .modal-close-button:hover { background: #f2f2f4; color: var(--ink); }
-.modal-content { margin-top: 18px; }
+.modal-content { min-height: 0; flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #aab0ba transparent; margin-top: 18px; }
+.modal-content::-webkit-scrollbar { width: 8px; }
+.modal-content::-webkit-scrollbar-track { background: transparent; }
+.modal-content::-webkit-scrollbar-thumb { border: 2px solid #fff; border-radius: 8px; background: #aab0ba; }
+.modal-content::-webkit-scrollbar-thumb:hover { background: #818995; }
 .modal-content .register-form { margin-top: 0; }
 .modal-content .register-form-div { gap: 12px; }
 .modal-content .reg-btn { margin-top: 16px; }
@@ -472,7 +478,6 @@ input:-webkit-autofill:focus {
   .top-manage-medicine .add-manage-medicine { align-self: flex-start; }
   .admin-facility-header { font-size: 21px; }
   .admin-facility-row { align-items: flex-start; padding: 14px; }
-  .modal-card,
   .addModal-card { max-height: calc(100vh - 36px); }
 }
 

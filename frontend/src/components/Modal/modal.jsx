@@ -1,10 +1,16 @@
-import React, { useId } from 'react'
+import React, { useEffect, useId } from 'react'
 import './modal.css'
 import CloseIcon from '@mui/icons-material/Close';
 const Modal = (props) => {
     const header = props.header ? props.header : "Modal";
     const children = props.children ? props.children : null;
     const titleId = useId();
+
+    useEffect(() => {
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = previousOverflow; };
+    }, []);
 
     const onCloseBtn = () => {
         if (props.handleClose) {

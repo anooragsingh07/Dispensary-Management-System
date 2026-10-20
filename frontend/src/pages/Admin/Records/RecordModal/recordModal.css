@@ -6,9 +6,8 @@
 }
 
 .student-details-scroll{
-    max-height: 450px;
     min-height: 100px;
-    overflow-y: auto;
+    overflow: visible;
 
 }
 
