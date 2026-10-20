@@ -1,61 +1,8 @@
-const mongoose = require('mongoose');
-const Hospital = require('../Models/nearByHospitals');
-
-const clean = (value) => String(value || '').trim();
-const validHospital = (name, address, contact) => name.length > 0 && name.length <= 160 && address.length > 0 && address.length <= 500 && contact.length > 0 && contact.length <= 80;
-
-exports.addNearByHospital = async (req, res) => {
-    try {
-        const name = clean(req.body?.name);
-        const address = clean(req.body?.address);
-        const contact = clean(req.body?.contact);
-        if (!validHospital(name, address, contact)) return res.status(400).json({ error: 'Enter a hospital name, address and contact number' });
-        const hospital = await Hospital.create({ name, address, contact, addedBy: req.user._id });
-        return res.status(201).json({ message: 'Hospital added', hospital });
-    } catch (error) {
-        console.error('Hospital creation failed:', error);
-        return res.status(500).json({ error: 'Unable to add this hospital right now' });
-    }
-};
-
-exports.getHospitals = async (_req, res) => {
-    try {
-        const hospitals = await Hospital.find().populate('addedBy', 'name').sort({ name: 1 });
-        return res.status(200).json({ hospitals });
-    } catch (error) {
-        console.error('Hospital list failed:', error);
-        return res.status(500).json({ error: 'Unable to load nearby hospitals right now' });
-    }
-};
-
-exports.updateHospitalById = async (req, res) => {
-    try {
-        if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Hospital not found' });
-        const hospital = await Hospital.findById(req.params.id);
-        if (!hospital) return res.status(404).json({ error: 'Hospital not found' });
-        const name = req.body?.name === undefined ? hospital.name : clean(req.body.name);
-        const address = req.body?.address === undefined ? hospital.address : clean(req.body.address);
-        const contact = req.body?.contact === undefined ? hospital.contact : clean(req.body.contact);
-        if (!validHospital(name, address, contact)) return res.status(400).json({ error: 'Enter a hospital name, address and contact number' });
-        hospital.name = name;
-        hospital.address = address;
-        hospital.contact = contact;
-        await hospital.save();
-        return res.status(200).json({ message: 'Hospital details updated', hospital });
-    } catch (error) {
-        console.error('Hospital update failed:', error);
-        return res.status(500).json({ error: 'Unable to update this hospital right now' });
-    }
-};
-
-exports.deleteHospitalById = async (req, res) => {
-    try {
-        if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Hospital not found' });
-        const hospital = await Hospital.findByIdAndDelete(req.params.id);
-        if (!hospital) return res.status(404).json({ error: 'Hospital not found' });
-        return res.status(200).json({ message: 'Hospital removed' });
-    } catch (error) {
-        console.error('Hospital deletion failed:', error);
-        return res.status(500).json({ error: 'Unable to remove this hospital right now' });
-    }
-};
+const {query,newId,isId,asApi}=require('../database');
+const clean=v=>String(v||'').trim();const valid=(n,a,c)=>n.length>0&&n.length<=160&&a.length>0&&a.length<=500&&c.length>0&&c.length<=80;
+const select=`SELECT h.*,jsonb_build_object('_id',u.id,'name',u.name) AS creator FROM nearby_hospitals h JOIN users u ON u.id=h.added_by`;
+const format=row=>{const h=asApi(row);h.addedBy=row.creator||row.added_by;delete h.creator;return h;};
+exports.addNearByHospital=async(req,res)=>{try{const name=clean(req.body?.name),address=clean(req.body?.address),contact=clean(req.body?.contact);if(!valid(name,address,contact))return res.status(400).json({error:'Enter a hospital name, address and contact number'});const row=(await query('INSERT INTO nearby_hospitals(id,name,address,contact,added_by) VALUES($1,$2,$3,$4,$5) RETURNING *',[newId(),name,address,contact,req.user._id])).rows[0];row.creator={_id:req.user._id,name:req.user.name};return res.status(201).json({message:'Hospital added',hospital:format(row)});}catch(e){console.error('Hospital creation failed:',e.message);return res.status(500).json({error:'Unable to add this hospital right now'});}};
+exports.getHospitals=async(_req,res)=>{try{const rows=(await query(`${select} ORDER BY h.name`)).rows;return res.status(200).json({hospitals:rows.map(format)});}catch(e){console.error('Hospital list failed:',e.message);return res.status(500).json({error:'Unable to load nearby hospitals right now'});}};
+exports.updateHospitalById=async(req,res)=>{try{if(!isId(req.params.id))return res.status(404).json({error:'Hospital not found'});const old=(await query('SELECT * FROM nearby_hospitals WHERE id=$1',[req.params.id])).rows[0];if(!old)return res.status(404).json({error:'Hospital not found'});const name=req.body?.name===undefined?old.name:clean(req.body.name),address=req.body?.address===undefined?old.address:clean(req.body.address),contact=req.body?.contact===undefined?old.contact:clean(req.body.contact);if(!valid(name,address,contact))return res.status(400).json({error:'Enter a hospital name, address and contact number'});const row=(await query('UPDATE nearby_hospitals SET name=$2,address=$3,contact=$4,updated_at=now() WHERE id=$1 RETURNING *',[old.id,name,address,contact])).rows[0];const by=(await query('SELECT id,name FROM users WHERE id=$1',[row.added_by])).rows[0];row.creator=by&&{_id:by.id,name:by.name};return res.status(200).json({message:'Hospital details updated',hospital:format(row)});}catch(e){console.error('Hospital update failed:',e.message);return res.status(500).json({error:'Unable to update this hospital right now'});}};
+exports.deleteHospitalById=async(req,res)=>{try{if(!isId(req.params.id))return res.status(404).json({error:'Hospital not found'});const row=await query('DELETE FROM nearby_hospitals WHERE id=$1 RETURNING id',[req.params.id]);if(!row.rowCount)return res.status(404).json({error:'Hospital not found'});return res.status(200).json({message:'Hospital removed'});}catch(e){console.error('Hospital removal failed:',e.message);return res.status(500).json({error:'Unable to remove this hospital right now'});}};

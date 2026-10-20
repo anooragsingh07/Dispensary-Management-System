@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const UserModel = require('../Models/user');
+const { getUserById } = require('../users');
 
 const getJwtSecret = () => {
     const secret = process.env.JWT_SECRET;
@@ -17,7 +17,7 @@ exports.authenticate = async (req, res, next) => {
         if (!token) return res.status(401).json({ error: 'Please sign in to continue' });
 
         const decoded = jwt.verify(token, getJwtSecret());
-        const user = await UserModel.findById(decoded.userId).select('-password').populate('studentId');
+        const user = await getUserById(decoded.userId);
         if (!user) return res.status(401).json({ error: 'Your account could not be found' });
         if ((decoded.authVersion || 0) !== (user.authVersion || 0)) return res.status(401).json({ error: 'Your session has expired. Please sign in again.' });
 

@@ -1,132 +1,22 @@
-const mongoose = require('mongoose');
-const History = require('../Models/history');
-const Medicine = require('../Models/medicine');
-const User = require('../Models/user');
+const { query, withTransaction, newId, isId, asApi } = require('../database');
+const qty=(v)=>Number.isSafeInteger(Number(v))&&Number(v)>0&&Number(v)<=1000000;
+const historySelect=`SELECT h.*,jsonb_build_object('_id',u.id,'name',s.name,'roll',s.roll,'recordType',s.record_type) AS patient FROM histories h JOIN users u ON u.id=h.student JOIN students s ON s.id=u.student_id`;
+const format=(row)=>{const h=asApi(row);h.student=row.patient||row.student;delete h.patient;return h;};
 
-const numericQuantity = (value) => Number.isSafeInteger(Number(value)) && Number(value) > 0 && Number(value) <= 1000000;
-const quantityInStock = { $convert: { input: '$quantity', to: 'double', onError: 0, onNull: 0 } };
-
-const restoreReservations = async (reserved) => {
-    const results = await Promise.allSettled(reserved.map(({ medicineId, quantity }) => Medicine.updateOne(
-        { _id: medicineId },
-        [{ $set: { quantity: { $add: [
-            { $convert: { input: '$quantity', to: 'double', onError: 0, onNull: 0 } },
-            quantity,
-        ] } } }],
-    )));
-    for (const result of results) {
-        if (result.status === 'rejected') console.error('Could not fully restore medicine stock after a failed visit record:', result.reason);
-    }
-};
-
-exports.addHistory = async (req, res) => {
-    const reserved = [];
-    try {
-        const body = req.body || {};
-        if (!body.student || !mongoose.isValidObjectId(body.student) || !Array.isArray(body.medicines) || body.medicines.length === 0 || body.medicines.length > 30) {
-            return res.status(400).json({ error: 'Choose a student and at least one medicine' });
-        }
-        if (body.symptoms !== undefined && (typeof body.symptoms !== 'string' || body.symptoms.length > 1000)) {
-            return res.status(400).json({ error: 'Symptoms must be text with at most 1000 characters' });
-        }
-
-        const student = await User.findOne({ _id: body.student, role: 'student' }).select('_id roll');
-        if (!student) return res.status(404).json({ error: 'Student not found' });
-
-        const requested = new Map();
-        for (const item of body.medicines) {
-            if (!item?._id || !mongoose.isValidObjectId(item._id) || !numericQuantity(item.requiredQuantity)) {
-                return res.status(400).json({ error: 'Each medicine needs a valid whole-number quantity greater than zero' });
-            }
-            if (item.dosage !== undefined && (typeof item.dosage !== 'string' || item.dosage.length > 200)) {
-                return res.status(400).json({ error: 'Dosage instructions must be text with at most 200 characters' });
-            }
-            const id = String(item._id);
-            const existing = requested.get(id);
-            const quantity = (existing?.quantity || 0) + Number(item.requiredQuantity);
-            if (!Number.isSafeInteger(quantity) || quantity > 1000000) return res.status(400).json({ error: 'Requested medicine quantity is too large' });
-            const dosage = String(item.dosage || '').trim();
-            if (existing?.dosage && dosage && existing.dosage !== dosage) {
-                return res.status(400).json({ error: 'Use one dosage instruction per medicine' });
-            }
-            requested.set(id, { quantity, dosage: dosage || existing?.dosage || '' });
-        }
-
-        const dispensedMedicines = [];
-        for (const [medicineId, { quantity, dosage }] of requested) {
-            const medicine = await Medicine.findOneAndUpdate(
-                { _id: medicineId, $expr: { $gte: [quantityInStock, quantity] } },
-                [{ $set: { quantity: { $subtract: [quantityInStock, quantity] } } }],
-                { new: true, projection: { name: 1, quantity: 1 } },
-            ).lean();
-
-            if (!medicine) {
-                await restoreReservations(reserved);
-                const existingMedicine = await Medicine.findById(medicineId).select('name');
-                const message = existingMedicine ? `There is not enough stock for ${existingMedicine.name}` : 'One of the selected medicines is no longer in stock';
-                return res.status(409).json({ error: message });
-            }
-
-            reserved.push({ medicineId, quantity });
-            dispensedMedicines.push({ name: medicine.name, requiredQuantity: quantity, dosage });
-        }
-
-        const history = await History.create({
-            roll: student.roll,
-            student: student._id,
-            symptoms: String(body.symptoms || '').trim(),
-            medicines: dispensedMedicines,
+exports.addHistory=async(req,res)=>{
+    try{
+        const b=req.body||{};if(!b.student||!isId(b.student)||!Array.isArray(b.medicines)||!b.medicines.length||b.medicines.length>30)return res.status(400).json({error:'Choose a student and at least one medicine'});
+        if(b.symptoms!==undefined&&(typeof b.symptoms!=='string'||b.symptoms.length>1000))return res.status(400).json({error:'Symptoms must be text with at most 1000 characters'});
+        const merged=new Map();for(const item of b.medicines){if(!item?._id||!isId(item._id)||!qty(item.requiredQuantity))return res.status(400).json({error:'Each medicine needs a valid whole-number quantity greater than zero'});if(item.dosage!==undefined&&(typeof item.dosage!=='string'||item.dosage.length>200))return res.status(400).json({error:'Dosage instructions must be text with at most 200 characters'});const old=merged.get(item._id),n=(old?.requiredQuantity||0)+Number(item.requiredQuantity),dosage=String(item.dosage||'').trim();if(n>1000000||(old?.dosage&&dosage&&old.dosage!==dosage))return res.status(400).json({error:'Use one dosage and a valid quantity per medicine'});merged.set(item._id,{requiredQuantity:n,dosage:dosage||old?.dosage||''});}
+        const historyId=await withTransaction(async(client)=>{
+            const person=(await client.query(`SELECT u.id,s.roll FROM users u JOIN students s ON s.id=u.student_id WHERE u.id=$1 AND u.role IN ('student','employee') AND u.is_active=true`,[b.student])).rows[0];if(!person)throw Object.assign(new Error('Student not found'),{status:404});
+            const medicines=[];for(const [medicineId,item] of merged){const row=await client.query('UPDATE medicines SET quantity=quantity-$2,updated_at=now() WHERE id=$1 AND quantity >= $2 RETURNING name',[medicineId,item.requiredQuantity]);if(!row.rowCount){const found=await client.query('SELECT id FROM medicines WHERE id=$1',[medicineId]);throw Object.assign(new Error(found.rowCount?'There is not enough stock for a selected medicine':'One of the selected medicines is no longer in stock'),{status:409});}medicines.push({name:row.rows[0].name,requiredQuantity:item.requiredQuantity,dosage:item.dosage});}
+            const id=newId();await client.query('INSERT INTO histories(id,roll,student,symptoms,medicines) VALUES($1,$2,$3,$4,$5::jsonb)',[id,person.roll,person.id,String(b.symptoms||'').trim(),JSON.stringify(medicines)]);return id;
         });
-        return res.status(201).json({ message: 'Visit record saved and medicine stock updated', history });
-    } catch (error) {
-        await restoreReservations(reserved);
-        console.error('Visit record creation failed:', error);
-        return res.status(500).json({ error: 'Unable to save this visit record right now. Any reserved stock has been restored where possible.' });
-    }
+        const row=(await query(`${historySelect} WHERE h.id=$1`,[historyId])).rows[0];return res.status(201).json({message:'Visit record saved and medicine stock updated',history:format(row)});
+    }catch(error){if(error.status)return res.status(error.status).json({error:error.message});console.error('Visit record creation failed:',error.message);return res.status(500).json({error:'Unable to save this visit record right now. No stock changes were committed.'});}
 };
-
-exports.getHistoryByDate = async (req, res) => {
-    try {
-        const { month, year } = req.query;
-        const query = {};
-        if (month || year) {
-            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            const monthIndex = months.indexOf(String(month || ''));
-            const yearNumber = Number(year);
-            if (monthIndex < 0 || !Number.isInteger(yearNumber) || yearNumber < 2000 || yearNumber > new Date().getFullYear() + 1) {
-                return res.status(400).json({ error: 'Select a valid month and year' });
-            }
-            query.createdAt = { $gte: new Date(yearNumber, monthIndex, 1), $lt: new Date(yearNumber, monthIndex + 1, 1) };
-        }
-
-        const history = await History.find(query).populate('student', 'name roll').sort({ createdAt: -1 });
-        return res.status(200).json({ history });
-    } catch (error) {
-        console.error('Visit records list failed:', error);
-        return res.status(500).json({ error: 'Unable to load visit records right now' });
-    }
-};
-
-exports.getStudentHistoryByRoll = async (req, res) => {
-    try {
-        const roll = String(req.params.roll || '').trim();
-        if (!roll) return res.status(400).json({ error: 'Enter a student roll number' });
-        const student = await User.findOne({ roll, role: 'student' }).select('_id');
-        if (!student) return res.status(404).json({ error: 'Student not found' });
-        const history = await History.find({ student: student._id }).populate('student', 'name roll').sort({ createdAt: -1 });
-        return res.status(200).json({ history });
-    } catch (error) {
-        console.error('Student visit history lookup failed:', error);
-        return res.status(500).json({ error: 'Unable to load this student’s records right now' });
-    }
-};
-
-exports.getMyHistory = async (req, res) => {
-    try {
-        const history = await History.find({ student: req.user._id }).populate('student', 'name roll').sort({ createdAt: -1 });
-        return res.status(200).json({ history });
-    } catch (error) {
-        console.error('Student visit history failed:', error);
-        return res.status(500).json({ error: 'Unable to load your visit records right now' });
-    }
-};
+const getDateBounds=(req,res,monthNames=false)=>{const {month,year}=req.query;if(!month&&!year)return null;const y=Number(year);let m=monthNames?['January','February','March','April','May','June','July','August','September','October','November','December'].indexOf(String(month)):Number(month)-1;if(!Number.isInteger(y)||y<2000||y>new Date().getFullYear()+1||!Number.isInteger(m)||m<0||m>11){res.status(400).json({error:'Select a valid month and year'});return false;}return[new Date(y,m,1),new Date(y,m+1,1)];};
+exports.getHistoryByDate=async(req,res)=>{try{const bounds=getDateBounds(req,res,true);if(bounds===false)return;const params=bounds||[],where=bounds?'WHERE h.created_at >= $1 AND h.created_at < $2':'';const rows=(await query(`${historySelect} ${where} ORDER BY h.created_at DESC`,params)).rows;return res.status(200).json({history:rows.map(format)});}catch(error){console.error('Visit records list failed:',error.message);return res.status(500).json({error:'Unable to load visit records right now'});}};
+exports.getStudentHistoryByRoll=async(req,res)=>{try{const roll=String(req.params.roll||'').trim().toUpperCase();if(!roll)return res.status(400).json({error:'Enter a student roll number'});const user=(await query(`SELECT u.id FROM students s JOIN users u ON u.student_id=s.id WHERE s.roll=$1 AND u.role IN ('student','employee')`,[roll])).rows[0];if(!user)return res.status(404).json({error:'Student not found'});const rows=(await query(`${historySelect} WHERE h.student=$1 ORDER BY h.created_at DESC`,[user.id])).rows;return res.status(200).json({history:rows.map(format)});}catch(error){console.error('Patient visit history lookup failed:',error.message);return res.status(500).json({error:'Unable to load this patient’s records right now'});}};
+exports.getMyHistory=async(req,res)=>{try{const rows=(await query(`${historySelect} WHERE h.student=$1 ORDER BY h.created_at DESC`,[req.user._id])).rows;return res.status(200).json({history:rows.map(format)});}catch(error){console.error('Patient visit history failed:',error.message);return res.status(500).json({error:'Unable to load your visit records right now'});}};

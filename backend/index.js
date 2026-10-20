@@ -5,6 +5,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const connectDatabase = require('./connection');
+const { closeDatabase } = require('./database');
 
 const app = express();
 const allowedOrigins = (process.env.FRONTEND_ORIGINS || 'http://localhost:5173')
@@ -47,14 +48,17 @@ const start = async () => {
     if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
         throw new Error('JWT_SECRET must be set before starting in production');
     }
+    if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+        throw new Error('DATABASE_URL must be set before starting in production');
+    }
     await connectDatabase();
     const port = Number(process.env.PORT) || 4000;
     const server = app.listen(port, () => console.log(`Dispensary API listening on port ${port}`));
 
     const shutdown = async () => {
-        server.close();
-        const mongoose = require('mongoose');
-        await mongoose.disconnect();
+        server.close(async () => {
+            await closeDatabase();
+        });
     };
     process.on('SIGINT', shutdown);
     process.on('SIGTERM', shutdown);

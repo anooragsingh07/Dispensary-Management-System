@@ -1,110 +1,98 @@
-# Campus Dispensary Management System
+# Campus Care — CGC Landran Dispensary
 
-A web portal for the campus health centre. Students can review their own medical history. Doctors and authorized dispensary staff can search student profiles and save separate clinical consultations. Administrators can manage doctor/staff accounts, medicine stock and public health-centre content.
+Campus Care is a web portal for the college health centre. Students and employees see their own profile and visit history. Doctors and authorized dispensary staff can search patients, record consultations and manage medicine stock. Administrators manage staff and public health-centre content.
+
+## Stack
+
+- Frontend: React 19, Vite, React Router, Axios and the existing CSS design system.
+- API: Node.js 20.13+, Express 5, JWT in HTTP-only cookies and bcrypt password hashing.
+- Database: PostgreSQL with the `pg` driver. Foreign keys connect patients, accounts, consultations, prescriptions, inventory and audit records.
+- Local database: Docker Compose with PostgreSQL 16 and a persistent named volume.
 
 ## Features
 
-- Side-by-side sign-in and account creation for students and college employees.
-- Administrator setup through a one-time seed command; public sign-up cannot create staff or administrator accounts.
-- Student profiles with unique roll numbers and employee profiles with unique employee IDs; both use the same consultation history workflow.
-- Consultation records for complaints, symptoms, vitals, assessment, prescriptions, advice, precautions, follow-up and private clinical notes.
-- Prescription items linked to their consultation; selected stock items are reserved atomically when a dispense quantity is entered.
-- Student medical history is scoped to the signed-in student's profile. Private clinical notes are visible only to authorized clinical staff.
-- Medicine search and public stock view.
-- Staff directory, facility and hospital listings, notices, and photo gallery.
-- Role-checked administrator, doctor, authorized staff, student and employee APIs backed by Express and MongoDB.
+- Combined sign-in and account creation for students and college employees.
+- Unique student roll numbers and employee IDs. Staff/admin accounts are provisioned by an administrator.
+- Patient search/profile workflow, separate consultation records, measured vitals, assessment, prescription, advice, precautions, follow-up and private clinical notes.
+- Student/employee history scoped to the signed-in patient; private clinical notes are excluded from patient responses.
+- Stock reservation and consultation/prescription/audit writes occur within a PostgreSQL transaction. If a save fails or stock is insufficient, the transaction rolls back.
+- Medicine inventory, dispensary team, facilities, nearby hospitals, notices and gallery management.
 
-## Medical-record data model
+## Local setup with Docker
 
-The project uses MongoDB, so the requested relational tables are implemented as collections:
-
-- `students`: student or employee patient profiles, with a unique campus ID and a `recordType` discriminator.
-- `users`: login identity, hashed password, role and `studentId` link for patient accounts.
-- `consultations`: one document per visit, linked with `studentId` and `doctorId`.
-- `prescriptions`: medicine instructions linked to `consultationId`, optionally linked to a stock `medicineId`.
-- `audit_logs`: consultation creation/update actor, record IDs and changed field names. Clinical field values are not copied into audit entries.
-
-MongoDB schema validation, unique indexes, and Mongoose validators enforce the application constraints. `clinicalNotes` is excluded by default and the student history endpoint explicitly removes it before responding.
-
-## Run locally
-
-### Requirements
-
-- Node.js 20.13 or newer and npm.
-- A MongoDB database, either local or hosted.
-- Cloudinary unsigned upload settings for gallery uploads (optional).
-
-### Start the API
-
-1. Open a terminal in `backend` and copy `.env.example` to `.env`.
-2. Set `MONGO_URI` and replace `JWT_SECRET` with a long random value. Set `ADMIN_NAME`, `ADMIN_EMAIL` and a strong `ADMIN_PASSWORD` for the initial administrator.
-3. Install dependencies and create the first administrator:
+1. If there is no root `.env` yet, copy `.env.example` to `.env`; set a strong local `POSTGRES_PASSWORD`. Preserve any existing `.env` file.
+2. Start PostgreSQL from the repository root:
 
    ```powershell
+   docker compose up -d postgres
+   ```
+
+3. If there is no `backend/.env` yet, copy `backend/.env.example` to `backend/.env`. Otherwise edit the existing ignored file and add `DATABASE_URL` using the same database, user and password from the root `.env`; keep any source `MONGO_MIGRATION_URI` there only if importing old data. Set a long random `JWT_SECRET`, `ADMIN_NAME`, `ADMIN_EMAIL` and `ADMIN_PASSWORD` (at least 12 characters). Do not overwrite an existing `.env` containing the Mongo source URI.
+4. Initialize the schema and first administrator:
+
+   ```powershell
+   cd backend
    npm install
+   npm run db:migrate
    npm run seed:admin
-   ```
-
-4. Start the API:
-
-   ```powershell
    npm run dev
    ```
 
-### Migrate an existing database
-
-Back up the database first. Existing installations may have student profile fields embedded in `users` and visits in the older visit-history collection. After setting the same `MONGO_URI` in `backend/.env`, run this one-time, repeat-safe migration before relying on existing student logins or visits:
-
-```powershell
-cd backend
-npm run db:migrate:medical
-```
-
-It creates or links `students`, moves existing profile fields out of student login documents, converts each legacy history entry to a consultation and prescription items, and removes the obsolete `users.roll` index. It does not remove legacy history documents or adjust stock for already-dispensed medicines. Inspect the migration summary and application data after running it.
-
-`npm run seed:demo` creates demonstration accounts and sample student visits, then links those sample visits to the new medical-record collections. Demo credentials must be set in the local `.env` and are never committed.
-
-The API listens on port `4000` by default. Its health endpoint is `http://localhost:4000/api/health`.
-
-### Start the website
-
-1. Open a second terminal in `frontend` and copy `.env.example` to `.env.local`.
-2. For local development, leave `VITE_API_BASE_URL` blank. Vite proxies `/api` requests to the API on port `4000`.
-3. If you want gallery uploads, set `VITE_CLOUDINARY_CLOUD_NAME` and `VITE_CLOUDINARY_UPLOAD_PRESET`.
-4. Install dependencies and start the website:
+5. In another terminal, copy `frontend/.env.example` to `frontend/.env.local`, install packages and start Vite:
 
    ```powershell
+   cd frontend
    npm install
    npm run dev
    ```
 
-Vite prints the local website URL when it starts.
+Vite prints the web URL; the API listens on port 4000 by default. The frontend's local Vite proxy sends `/api` requests to the API. The PostgreSQL container data persists in the `campus-care-postgres` Docker volume. Back it up before removing that volume.
 
-## Production configuration
+### Backend environment
 
-- Set `NODE_ENV=production`, `PORT`, `MONGO_URI`, and a unique, long `JWT_SECRET` in the API environment.
-- Set `FRONTEND_ORIGINS` to the exact website origin or comma-separated origins. Do not use `*` with credentialed cookies.
-- Set `COOKIE_SAME_SITE=lax` when the website and API share a site. For a genuinely cross-site deployment, use `COOKIE_SAME_SITE=none` and HTTPS.
-- Set `VITE_API_BASE_URL` to the public API origin when the website and API use different hosts, then rebuild the frontend.
-- Configure a Cloudinary unsigned upload preset and provide its name and cloud name to the frontend. The API accepts only HTTPS image links.
+`backend/.env.example` documents `DATABASE_URL`, optional pool sizing and TLS configuration, JWT/session settings, frontend CORS origins, seed account values and optional Cloudinary public upload settings. The ignored `backend/.env` is the local source of actual credentials. Do not commit either actual database passwords or JWT secrets.
 
-Keep real `.env` files and credentials out of Git. The repository ignores local environment files and dependency folders.
+## Import existing MongoDB data
 
-## Workflow and permissions
+The API now uses PostgreSQL. Existing MongoDB records are **not** copied automatically when the app starts. Preserve a backup of the source MongoDB database and use an empty PostgreSQL target for the first import.
 
-1. Students create an account with their roll number; college employees choose the employee option and use their employee ID. An administrator creates doctor and staff accounts from staff management. Authorized staff and administrators can register/search student profiles or search an employee by employee ID.
-2. From the student profile, clinical staff choose **New consultation**, enter the visit and assessment, add prescription instructions, and save. Each save creates a separate consultation; it does not replace earlier visits.
-3. A signed-in student or college employee sees only the profile linked to their account and their consultations, in chronological order. Patient-facing APIs omit `clinicalNotes`. Administrators, doctors and authorized dispensary staff can view private notes from clinical record screens.
+1. Set `DATABASE_URL` to the target PostgreSQL database in `backend/.env`.
+2. Set `MONGO_MIGRATION_URI` to the source MongoDB URI in the ignored `backend/.env` (the script also accepts the old `MONGO_URI` variable). Never paste the URI into source or commit it.
+3. Run:
 
-The doctor/staff dashboard routes require an authenticated role. Doctors can edit only consultations they created; administrators can edit any consultation; authorized staff can create and view clinical records but cannot edit them. Students cannot use clinician lookup/history endpoints, and their own history endpoint derives `studentId` from the authenticated session rather than a request parameter.
+   ```powershell
+   cd backend
+   npm run db:import:mongo
+   ```
 
-## Tests
+The importer creates the PostgreSQL schema and copies the application's users, student profiles, medicines, legacy histories, consultations, prescriptions, audit logs, facilities, nearby hospitals, notices and gallery records while preserving string IDs and timestamps where possible. It reads MongoDB without modifying it and performs PostgreSQL inserts in one transaction. Missing required relationships or unique-ID conflicts stop the import and roll back that transaction; repair source data and retry. Review the imported row counts and representative accounts/visits before switching users to the new service. The app does not dual-write between databases. Do not expose the target to live writes until the migration has been accepted.
 
-Run the backend validation and role-guard tests with:
+For a new installation without old data, skip this import and use `npm run seed:admin`. `npm run seed:demo` adds clearly labelled synthetic sample records using the demo passwords from `backend/.env.example`.
 
-```powershell
-cd backend
-npm test
-```
+## Database design
 
-The end-to-end registration/search/consultation/prescription/history/RBAC test runs only when `TEST_MONGO_URI` points to a dedicated MongoDB database whose database name contains `test`. It is skipped otherwise to avoid writing test fixtures into a regular development or production database. To run it, set `TEST_MONGO_URI` in the test shell, then run `npm test`.
+PostgreSQL tables are created by `backend/migrations/001_initial.sql`:
+
+- `students`: one profile per student or employee, unique campus ID in `roll` and `record_type` discriminator.
+- `users`: email/password hash/role and optional unique `student_id` link.
+- `consultations`: one visit linked to patient and clinician, measured vitals as JSONB, optional private notes, and a clinician-scoped idempotency key.
+- `prescriptions`: rows linked to a consultation and optional stock item.
+- `medicines`: available stock and usage label.
+- `audit_logs`: actor, consultation, patient and changed field names (not clinical values).
+- `histories`: compatibility storage for older visit records, plus public content tables `facilities`, `nearby_hospitals`, `notifications` and `galleries`.
+
+IDs use text keys so Mongo ObjectId values can be preserved during import; new rows use UUID strings. SQL foreign keys protect the links. Consultation creation/update and stock deduction run in PostgreSQL transactions. The patient history endpoint derives the profile ID from the session and never accepts another patient's ID from that endpoint.
+
+## API and permissions
+
+All API routes are registered in `backend/index.js`; route-level role checks are in `backend/Routes/`. Session authentication and role guards are in `backend/Authentication/auth.js`. Main groups include `/api/auth`, `/api/consultations`, `/api/medicine`, `/api/history`, `/api/facility`, `/api/hospital`, `/api/notification` and `/api/gallary`.
+
+Public sign-up checks uniqueness but currently does not verify the campus ID against an approved CGC roster or identity provider. That institutional verification should be added before relying on public self-registration for identity proof.
+
+## Commands
+
+Backend: `npm run dev`, `npm start`, `npm run db:migrate`, `npm run db:import:mongo`, `npm run seed:admin`, `npm run seed:demo`, `npm test`.
+
+Frontend: `npm run dev`, `npm run build`, `npm run lint`, `npm run preview`.
+
+Keep local `.env` files and real credentials out of Git. They are ignored by the repository.

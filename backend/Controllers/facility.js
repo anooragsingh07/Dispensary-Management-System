@@ -1,58 +1,8 @@
-const mongoose = require('mongoose');
-const Facility = require('../Models/facility');
-
-const textField = (value) => String(value || '').trim();
-const validFacility = (title, description) => title.length > 0 && title.length <= 120 && description.length > 0 && description.length <= 2000;
-
-exports.addFacility = async (req, res) => {
-    try {
-        const title = textField(req.body?.title);
-        const description = textField(req.body?.description);
-        if (!validFacility(title, description)) return res.status(400).json({ error: 'Enter a facility name and description (up to 2,000 characters)' });
-        const facility = await Facility.create({ title, description, addedBy: req.user._id });
-        return res.status(201).json({ message: 'Facility added', facility });
-    } catch (error) {
-        console.error('Facility creation failed:', error);
-        return res.status(500).json({ error: 'Unable to add this facility right now' });
-    }
-};
-
-exports.updateFacility = async (req, res) => {
-    try {
-        if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Facility not found' });
-        const facility = await Facility.findById(req.params.id);
-        if (!facility) return res.status(404).json({ error: 'Facility not found' });
-        const title = req.body?.title === undefined ? facility.title : textField(req.body.title);
-        const description = req.body?.description === undefined ? facility.description : textField(req.body.description);
-        if (!validFacility(title, description)) return res.status(400).json({ error: 'Enter a facility name and description (up to 2,000 characters)' });
-        facility.title = title;
-        facility.description = description;
-        await facility.save();
-        return res.status(200).json({ message: 'Facility updated', facility });
-    } catch (error) {
-        console.error('Facility update failed:', error);
-        return res.status(500).json({ error: 'Unable to update this facility right now' });
-    }
-};
-
-exports.getAllFacility = async (_req, res) => {
-    try {
-        const facilities = await Facility.find().populate('addedBy', 'name').sort({ title: 1 });
-        return res.status(200).json({ facilities });
-    } catch (error) {
-        console.error('Facility list failed:', error);
-        return res.status(500).json({ error: 'Unable to load facilities right now' });
-    }
-};
-
-exports.deleteFacility = async (req, res) => {
-    try {
-        if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Facility not found' });
-        const facility = await Facility.findByIdAndDelete(req.params.id);
-        if (!facility) return res.status(404).json({ error: 'Facility not found' });
-        return res.status(200).json({ message: 'Facility removed' });
-    } catch (error) {
-        console.error('Facility deletion failed:', error);
-        return res.status(500).json({ error: 'Unable to remove this facility right now' });
-    }
-};
+const {query,newId,isId,asApi}=require('../database');
+const clean=v=>String(v||'').trim();const valid=(t,d)=>t.length>0&&t.length<=120&&d.length>0&&d.length<=2000;
+const select=`SELECT f.*,jsonb_build_object('_id',u.id,'name',u.name) AS creator FROM facilities f JOIN users u ON u.id=f.added_by`;
+const format=row=>{const f=asApi(row);f.addedBy=row.creator||row.added_by;delete f.creator;return f;};
+exports.addFacility=async(req,res)=>{try{const title=clean(req.body?.title),description=clean(req.body?.description);if(!valid(title,description))return res.status(400).json({error:'Enter a facility name and description (up to 2,000 characters)'});const row=(await query('INSERT INTO facilities(id,title,description,added_by) VALUES($1,$2,$3,$4) RETURNING *',[newId(),title,description,req.user._id])).rows[0];row.creator={_id:req.user._id,name:req.user.name};return res.status(201).json({message:'Facility added',facility:format(row)});}catch(e){console.error('Facility creation failed:',e.message);return res.status(500).json({error:'Unable to add this facility right now'});}};
+exports.updateFacility=async(req,res)=>{try{if(!isId(req.params.id))return res.status(404).json({error:'Facility not found'});const old=(await query('SELECT * FROM facilities WHERE id=$1',[req.params.id])).rows[0];if(!old)return res.status(404).json({error:'Facility not found'});const title=req.body?.title===undefined?old.title:clean(req.body.title),description=req.body?.description===undefined?old.description:clean(req.body.description);if(!valid(title,description))return res.status(400).json({error:'Enter a facility name and description (up to 2,000 characters)'});const row=(await query('UPDATE facilities SET title=$2,description=$3,updated_at=now() WHERE id=$1 RETURNING *',[old.id,title,description])).rows[0];row.creator=(await query('SELECT id,name FROM users WHERE id=$1',[row.added_by])).rows[0];if(row.creator)row.creator={_id:row.creator.id,name:row.creator.name};return res.status(200).json({message:'Facility updated',facility:format(row)});}catch(e){console.error('Facility update failed:',e.message);return res.status(500).json({error:'Unable to update this facility right now'});}};
+exports.getAllFacility=async(_req,res)=>{try{const rows=(await query(`${select} ORDER BY f.title`)).rows;return res.status(200).json({facilities:rows.map(format)});}catch(e){console.error('Facility list failed:',e.message);return res.status(500).json({error:'Unable to load facilities right now'});}};
+exports.deleteFacility=async(req,res)=>{try{if(!isId(req.params.id))return res.status(404).json({error:'Facility not found'});const row=await query('DELETE FROM facilities WHERE id=$1 RETURNING id',[req.params.id]);if(!row.rowCount)return res.status(404).json({error:'Facility not found'});return res.status(200).json({message:'Facility removed'});}catch(e){console.error('Facility removal failed:',e.message);return res.status(500).json({error:'Unable to remove this facility right now'});}};

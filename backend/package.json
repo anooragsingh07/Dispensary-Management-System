@@ -11,7 +11,8 @@
     "dev": "node --watch index.js",
     "seed:admin": "node scripts/seedAdmin.js",
     "seed:demo": "node scripts/seedDemoData.js",
-    "db:migrate:medical": "node scripts/migrateMedicalRecords.js",
+    "db:migrate": "node scripts/migratePostgres.js",
+    "db:import:mongo": "node scripts/importMongoToPostgres.js",
     "test": "node --test"
   },
   "author": "",
@@ -23,6 +24,7 @@
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.13.1"
+    "mongodb": "^7.7.0",
+    "pg": "^8.23.1"
   }
 }

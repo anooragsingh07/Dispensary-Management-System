@@ -1,199 +1,26 @@
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-
-const bcrypt = require('bcryptjs');
-const mongoose = require('mongoose');
-const connectDatabase = require('../connection');
-const User = require('../Models/user');
-const Student = require('../Models/student');
-const Medicine = require('../Models/medicine');
-const History = require('../Models/history');
-const Facility = require('../Models/facility');
-const Hospital = require('../Models/nearByHospitals');
-const Notification = require('../Models/notification');
-const Gallery = require('../Models/gallary');
-const { migrateStudents, migrateHistory, dropLegacyRollIndex } = require('./migrateMedicalRecords');
-
-const upsert = (Model, match, values) => Model.findOneAndUpdate(
-    match,
-    { $setOnInsert: values },
-    { new: true, upsert: true, setDefaultsOnInsert: true, runValidators: true },
-);
-
-const upsertDemoUser = async (account) => {
-    const password = String(process.env[account.passwordEnv] || '');
-    if (password.length < 12) {
-        throw new Error(account.passwordEnv + ' must be set in backend/.env with at least 12 characters');
-    }
-    if (account.role === 'student') {
-        const profile = { ...account.profile, roll: String(account.profile.roll).trim().toUpperCase() };
-        const student = await Student.findOneAndUpdate(
-            { roll: profile.roll },
-            { $set: { ...profile, name: account.name } },
-            { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
-        );
-        const user = await User.findOneAndUpdate(
-            { email: account.email },
-            { $set: { email: account.email, role: 'student', password: await bcrypt.hash(password, 12), studentId: student._id } },
-            { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
-        );
-        return { ...user.toObject(), ...student.toObject(), _id: user._id, userId: user._id, studentId: student._id };
-    }
-    const values = {
-        name: account.name,
-        email: account.email,
-        role: account.role,
-        password: await bcrypt.hash(password, 12),
-        ...account.profile,
-    };
-    return User.findOneAndUpdate(
-        { email: account.email },
-        { $set: values },
-        { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
-    );
-};
-
-const run = async () => {
-    await connectDatabase();
-    await Promise.all([Student.init(), User.init(), History.init()]);
-    await migrateStudents();
-    await dropLegacyRollIndex();
-    const admin = await User.findOne({ role: 'admin' });
-    if (!admin) throw new Error('Create the administrator first with npm run seed:admin');
-
-    const staff = await upsertDemoUser({
-        name: 'Demo Clinic Staff',
-        email: 'demo.staff@dispensary.local',
-        role: 'staff',
-        passwordEnv: 'DEMO_STAFF_PASSWORD',
-        profile: { designation: 'Dispensary Nurse', mobileNo: '9000000101' },
+const path=require('path');require('dotenv').config({path:path.join(__dirname,'..','.env')});
+const bcrypt=require('bcryptjs');const {query,withTransaction,newId,closeDatabase}=require('../database');const connectDatabase=require('../connection');
+const upsertPatient=async({email,password,name,roll,bloodGroup,age,mobileNo,fatherName,fatherMobile,address})=>withTransaction(async(client)=>{
+    let row=(await client.query('SELECT id FROM students WHERE roll=$1',[roll])).rows[0];const sid=row?.id||newId();
+    await client.query(`INSERT INTO students(id,name,record_type,roll,mobile_no,father_name,father_mobile,address,age,blood_group,previous_health) VALUES($1,$2,'student',$3,$4,$5,$6,$7,$8,$9,'Synthetic demonstration profile') ON CONFLICT(roll) DO UPDATE SET name=EXCLUDED.name,mobile_no=EXCLUDED.mobile_no,father_name=EXCLUDED.father_name,father_mobile=EXCLUDED.father_mobile,address=EXCLUDED.address,age=EXCLUDED.age,blood_group=EXCLUDED.blood_group,updated_at=now()`,[sid,name,roll,mobileNo,fatherName,fatherMobile,address,age,bloodGroup]);
+    const patient=(await client.query('SELECT id FROM students WHERE roll=$1',[roll])).rows[0];const hash=await bcrypt.hash(password,12);
+    const user=(await client.query(`INSERT INTO users(id,email,password,role,student_id) VALUES($1,$2,$3,'student',$4) ON CONFLICT(email) DO UPDATE SET password=EXCLUDED.password,role='student',student_id=EXCLUDED.student_id,updated_at=now() RETURNING id`,[newId(),email,hash,patient.id])).rows[0];return{studentId:patient.id,userId:user.id,roll};
+});
+const run=async()=>{
+    const staffPassword=String(process.env.DEMO_STAFF_PASSWORD||''),studentPassword=String(process.env.DEMO_STUDENT_PASSWORD||'');if(staffPassword.length<12||studentPassword.length<12)throw new Error('Set DEMO_STAFF_PASSWORD and DEMO_STUDENT_PASSWORD in backend/.env; each must be at least 12 characters');
+    await connectDatabase();const admin=(await query("SELECT id FROM users WHERE role='admin' AND is_active=true ORDER BY created_at LIMIT 1")).rows[0];if(!admin)throw new Error('Create the administrator first with npm run seed:admin');
+    await query(`INSERT INTO users(id,name,email,password,role,designation,mobile_no) VALUES($1,'Demo Clinic Staff','demo.staff@dispensary.local',$2,'staff','Dispensary Nurse','9000000101') ON CONFLICT(email) DO UPDATE SET password=EXCLUDED.password,role='staff',designation=EXCLUDED.designation,updated_at=now()`,[newId(),await bcrypt.hash(staffPassword,12)]);
+    const patients=[];for(const p of [{name:'Aarav Sharma',email:'demo.student1@dispensary.local',roll:'DEMO-2026-001',bloodGroup:'B+',age:20,mobileNo:'9000000201',fatherName:'Demo Guardian One',fatherMobile:'9000000202',address:'Demo residence, Main Campus'},{name:'Ananya Patel',email:'demo.student2@dispensary.local',roll:'DEMO-2026-002',bloodGroup:'O+',age:19,mobileNo:'9000000203',fatherName:'Demo Guardian Two',fatherMobile:'9000000204',address:'Demo residence, North Campus'}])patients.push(await upsertPatient({...p,password:studentPassword}));
+    const medicineRows=[['DEMO — Paracetamol 500 mg',120,'Synthetic demo stock; clinical use must be directed by a clinician.'],['DEMO — Cetirizine 10 mg',45,'Synthetic demo stock; clinical use must be directed by a clinician.'],['DEMO — Oral Rehydration Salts',80,'Synthetic demo stock; follow package directions.']];const medicines=[];
+    for(const [name,quantity,usage] of medicineRows){let row=(await query('SELECT id FROM medicines WHERE name=$1 ORDER BY created_at LIMIT 1',[name])).rows[0];if(row){await query('UPDATE medicines SET usage=$2,updated_at=now() WHERE id=$1',[row.id,usage]);}else{row=(await query('INSERT INTO medicines(id,name,quantity,usage,added_by) VALUES($1,$2,$3,$4,$5) RETURNING id',[newId(),name,quantity,usage,admin.id])).rows[0];}medicines.push(row.id);}
+    const visits=[{patient:patients[0],at:'2026-10-12T09:30:00.000Z',complaint:'DEMO: headache reported',symptoms:'Synthetic demonstration record.',diagnosis:'DEMO: sample assessment only',medicine:medicines[0]},{patient:patients[1],at:'2026-10-14T13:00:00.000Z',complaint:'DEMO: minor skin irritation reported',symptoms:'Synthetic demonstration record.',diagnosis:'DEMO: sample assessment only',medicine:medicines[1]}];
+    for(const v of visits)await withTransaction(async(client)=>{const key=`seed-demo-${v.patient.roll}`;let c=(await client.query('SELECT id FROM consultations WHERE doctor_id=$1 AND idempotency_key=$2',[admin.id,key])).rows[0];if(!c){c=(await client.query(`INSERT INTO consultations(id,student_id,doctor_id,visit_at,chief_complaint,symptoms,diagnosis,doctor_advice,idempotency_key) VALUES($1,$2,$3,$4,$5,$6,$7,'Synthetic sample only; consult a clinician for care.', $8) RETURNING id`,[newId(),v.patient.studentId,admin.id,v.at,v.complaint,v.symptoms,v.diagnosis,key])).rows[0];await client.query('INSERT INTO audit_logs(id,actor_id,action,consultation_id,student_id,changed_fields) VALUES($1,$2,$3,$4,$5,$6)',[newId(),admin.id,'consultation.created',c.id,v.patient.studentId,['visitAt','chiefComplaint','symptoms','diagnosis','doctorAdvice']]);}
+        await client.query('DELETE FROM prescriptions WHERE consultation_id=$1',[c.id]);const med=(await client.query('SELECT name FROM medicines WHERE id=$1',[v.medicine])).rows[0];await client.query(`INSERT INTO prescriptions(id,consultation_id,medicine_id,medicine_name,dosage,frequency,duration,dispensed_quantity) VALUES($1,$2,$3,$4,'DEMO only','DEMO only','DEMO only',0)`,[newId(),c.id,v.medicine,med.name]);
     });
-    const students = await Promise.all([
-        upsertDemoUser({
-            name: 'Aarav Sharma',
-            email: 'demo.student1@dispensary.local',
-            role: 'student',
-            passwordEnv: 'DEMO_STUDENT_PASSWORD',
-            profile: {
-                roll: 'DEMO-2026-001', mobileNo: '9000000201', age: 20,
-                fatherName: 'Rajesh Sharma', fatherMobile: '9000000202',
-                address: 'Demo residence, Main Campus', bloodGroup: 'B+',
-                previous_health: 'Seasonal allergies',
-            },
-        }),
-        upsertDemoUser({
-            name: 'Ananya Patel',
-            email: 'demo.student2@dispensary.local',
-            role: 'student',
-            passwordEnv: 'DEMO_STUDENT_PASSWORD',
-            profile: {
-                roll: 'DEMO-2026-002', mobileNo: '9000000203', age: 19,
-                fatherName: 'Kiran Patel', fatherMobile: '9000000204',
-                address: 'Demo residence, North Campus', bloodGroup: 'O+',
-                previous_health: 'No known history',
-            },
-        }),
-    ]);
-
-    const medicineRows = [
-        ['DEMO — Paracetamol 500 mg', 120, 'For fever or mild pain. Follow clinician instructions.'],
-        ['DEMO — Cetirizine 10 mg', 45, 'For allergy symptoms. May cause drowsiness.'],
-        ['DEMO — Oral Rehydration Salts', 80, 'Dissolve one sachet in the stated amount of clean water.'],
-        ['DEMO — Ibuprofen 200 mg', 60, 'For pain or inflammation. Take only as directed by a clinician.'],
-        ['DEMO — Antiseptic Wipes', 35, 'For external first aid use only.'],
-        ['DEMO — Vitamin C 500 mg', 72, 'Use only as directed by a clinician.'],
-    ];
-    const medicines = await Promise.all(medicineRows.map(([name, quantity, usage]) => upsert(
-        Medicine, { name }, { name, quantity, usage, addedBy: admin._id },
-    )));
-
-    const medicineByName = new Map(medicines.map((item) => [item.name, item]));
-    const historyRows = [
-        { student: students[0], at: '2026-10-12T09:30:00.000Z', symptoms: 'Headache reported during the demo visit.', items: [['DEMO — Paracetamol 500 mg', 2, 'As directed by clinic staff.']] },
-        { student: students[0], at: '2026-10-16T11:15:00.000Z', symptoms: 'Seasonal allergy symptoms reported.', items: [['DEMO — Cetirizine 10 mg', 1, 'As directed by clinic staff.'], ['DEMO — Oral Rehydration Salts', 1, 'Prepare according to the packet directions.']] },
-        { student: students[1], at: '2026-10-14T13:00:00.000Z', symptoms: 'Minor skin irritation reported during the demo visit.', items: [['DEMO — Antiseptic Wipes', 2, 'Use externally as directed.'], ['DEMO — Paracetamol 500 mg', 1, 'As directed by clinic staff.']] },
-        { student: students[1], at: '2026-10-18T10:00:00.000Z', symptoms: 'General wellness consultation in the demo data.', items: [['DEMO — Vitamin C 500 mg', 1, 'As directed by clinic staff.']] },
-    ];
-    await Promise.all(historyRows.map(async ({ student, at, symptoms, items }) => {
-        const createdAt = new Date(at);
-        const visitMeds = items.map(([name, requiredQuantity, dosage]) => ({ name, requiredQuantity, dosage }));
-        const signature = JSON.stringify(visitMeds.map(({ name, requiredQuantity }) => ({ name, requiredQuantity })));
-        const studentVisits = await History.find({ student: student._id }).sort({ createdAt: 1 });
-        const existingVisits = studentVisits.filter((visit) => JSON.stringify(visit.medicines.map((medicine) => ({
-            name: medicine.name,
-            requiredQuantity: medicine.requiredQuantity,
-        }))) === signature);
-
-        if (existingVisits.length) {
-            const [keep, ...duplicates] = existingVisits;
-            keep.roll = student.roll;
-            keep.symptoms = symptoms;
-            keep.medicines = visitMeds;
-            await keep.save();
-            if (duplicates.length) await History.deleteMany({ _id: { $in: duplicates.map((visit) => visit._id) } });
-            return;
-        }
-
-        await History.create({ roll: student.roll, student: student._id, symptoms, medicines: visitMeds, createdAt });
-    }));
-
-    const facilities = [
-        ['DEMO — First Aid Room', 'Basic first aid, dressing supplies and initial assessment during campus hours.'],
-        ['DEMO — Rest and Recovery Area', 'A supervised space for students who need short-term observation and rest.'],
-        ['DEMO — Health Counselling', 'Private health guidance and referrals to qualified care providers.'],
-    ];
-    await Promise.all(facilities.map(([title, description]) => upsert(
-        Facility, { title }, { title, description, addedBy: admin._id },
-    )));
-
-    const hospitals = [
-        ['DEMO — City General Hospital', '12 College Road, Main Campus District', '+91-90000-03001'],
-        ['DEMO — Community Health Centre', '8 Market Street, Main Campus District', '+91-90000-03002'],
-        ['DEMO — University Emergency Clinic', 'North Gate, University Campus', '+91-90000-03003'],
-    ];
-    await Promise.all(hospitals.map(([name, address, contact]) => upsert(
-        Hospital, { name }, { name, address, contact, addedBy: admin._id },
-    )));
-
-    const notices = [
-        'DEMO — Dispensary hours: Monday to Saturday, 9:00 AM to 5:00 PM.',
-        'DEMO — Please bring your student ID when visiting the dispensary.',
-        'DEMO — For emergencies, contact local emergency services immediately.',
-    ];
-    await Promise.all(notices.map((title) => upsert(
-        Notification, { title }, { title, addedBy: admin._id },
-    )));
-
-    const images = [
-        'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80',
-        'https://images.unsplash.com/photo-1584982751601-97dcc096659c?auto=format&fit=crop&w=1200&q=80',
-        'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80',
-    ];
-    await Promise.all(images.map((link) => upsert(
-        Gallery, { link }, { link, addedBy: admin._id },
-    )));
-
-    await migrateStudents();
-    await migrateHistory();
-
-    const counts = await Promise.all([
-        User.countDocuments({ role: 'staff', email: 'demo.staff@dispensary.local' }),
-        User.countDocuments({ role: 'student', email: /^demo\.student[12]@dispensary\.local$/ }),
-        Medicine.countDocuments({ name: /^DEMO — / }),
-        History.countDocuments({ roll: /^DEMO-2026-/ }),
-        Facility.countDocuments({ title: /^DEMO — / }),
-        Hospital.countDocuments({ name: /^DEMO — / }),
-        Notification.countDocuments({ title: /^DEMO — / }),
-        Gallery.countDocuments({ link: { $in: images } }),
-    ]);
-    console.log('Demo data is ready: 1 staff account, 2 student accounts, ' + counts[2] + ' medicines, ' + counts[3] + ' visit records, ' + counts[4] + ' facilities, ' + counts[5] + ' hospitals, ' + counts[6] + ' notices, and ' + counts[7] + ' gallery images.');
+    for(const [title,description] of [['DEMO — First Aid Room','Synthetic demo facility for basic first aid during campus hours.'],['DEMO — Rest and Recovery Area','Synthetic demo space for supervised short-term rest.'],['DEMO — Health Counselling','Synthetic demo listing for health guidance and referral.']])await query('INSERT INTO facilities(id,title,description,added_by) SELECT $1,$2,$3,$4 WHERE NOT EXISTS(SELECT 1 FROM facilities WHERE title=$2)',[newId(),title,description,admin.id]);
+    for(const [name,address,contact] of [['DEMO — City General Hospital','12 College Road, Demo District','+91-90000-03001'],['DEMO — Community Health Centre','8 Market Street, Demo District','+91-90000-03002']])await query('INSERT INTO nearby_hospitals(id,name,address,contact,added_by) SELECT $1,$2,$3,$4,$5 WHERE NOT EXISTS(SELECT 1 FROM nearby_hospitals WHERE name=$2)',[newId(),name,address,contact,admin.id]);
+    for(const title of ['DEMO — Dispensary hours: Monday to Saturday, 9:00 AM to 5:00 PM.','DEMO — Bring your campus ID when visiting the dispensary.','DEMO — For emergencies, contact local emergency services.'])await query('INSERT INTO notifications(id,title,added_by) SELECT $1,$2,$3 WHERE NOT EXISTS(SELECT 1 FROM notifications WHERE title=$2)',[newId(),title,admin.id]);
+    for(const link of ['https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80','https://images.unsplash.com/photo-1584982751601-97dcc096659c?auto=format&fit=crop&w=1200&q=80'])await query('INSERT INTO galleries(id,link,added_by) SELECT $1,$2,$3 WHERE NOT EXISTS(SELECT 1 FROM galleries WHERE link=$2)',[newId(),link,admin.id]);
+    console.log('Synthetic demo accounts, patient profiles, consultations, prescriptions and medicine stock are ready.');
 };
-
-run()
-    .catch((error) => {
-        console.error('Could not seed demo data:', error.message);
-        process.exitCode = 1;
-    })
-    .finally(async () => {
-        await mongoose.disconnect();
-    });
+run().catch(e=>{console.error('Could not seed demo data:',e.message);process.exitCode=1;}).finally(closeDatabase);

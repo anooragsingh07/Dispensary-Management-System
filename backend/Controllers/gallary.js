@@ -1,45 +1,5 @@
-const mongoose = require('mongoose');
-const GalleryImage = require('../Models/gallary');
-
-const secureImageUrl = (value) => {
-    try {
-        const url = new URL(String(value || '').trim());
-        return url.protocol === 'https:' && Boolean(url.hostname);
-    } catch {
-        return false;
-    }
-};
-
-exports.addImage = async (req, res) => {
-    try {
-        const link = String(req.body?.link || '').trim();
-        if (link.length > 2048 || !secureImageUrl(link)) return res.status(400).json({ error: 'Use a valid HTTPS image link' });
-        const image = await GalleryImage.create({ link, addedBy: req.user._id });
-        return res.status(201).json({ message: 'Image added to the gallery', image });
-    } catch (error) {
-        console.error('Gallery upload record failed:', error);
-        return res.status(500).json({ error: 'Unable to add this image right now' });
-    }
-};
-
-exports.getAllGallary = async (_req, res) => {
-    try {
-        const images = await GalleryImage.find().sort({ createdAt: -1 });
-        return res.status(200).json({ images });
-    } catch (error) {
-        console.error('Gallery list failed:', error);
-        return res.status(500).json({ error: 'Unable to load gallery images right now' });
-    }
-};
-
-exports.deleteImageById = async (req, res) => {
-    try {
-        if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Gallery image not found' });
-        const image = await GalleryImage.findByIdAndDelete(req.params.id);
-        if (!image) return res.status(404).json({ error: 'Gallery image not found' });
-        return res.status(200).json({ message: 'Gallery image removed' });
-    } catch (error) {
-        console.error('Gallery image removal failed:', error);
-        return res.status(500).json({ error: 'Unable to remove this image right now' });
-    }
-};
+const {query,newId,isId,asApi}=require('../database');
+const validUrl=(v)=>{try{const u=new URL(String(v||'').trim());return u.protocol==='https:'&&!!u.hostname;}catch{return false;}};
+exports.addImage=async(req,res)=>{try{const link=String(req.body?.link||'').trim();if(link.length>2048||!validUrl(link))return res.status(400).json({error:'Use a valid HTTPS image link'});const row=(await query('INSERT INTO galleries(id,link,added_by) VALUES($1,$2,$3) RETURNING *',[newId(),link,req.user._id])).rows[0];return res.status(201).json({message:'Image added to the gallery',image:asApi(row)});}catch(e){console.error('Gallery upload record failed:',e.message);return res.status(500).json({error:'Unable to add this image right now'});}};
+exports.getAllGallary=async(_req,res)=>{try{const rows=(await query('SELECT * FROM galleries ORDER BY created_at DESC')).rows;return res.status(200).json({images:rows.map(asApi)});}catch(e){console.error('Gallery list failed:',e.message);return res.status(500).json({error:'Unable to load gallery images right now'});}};
+exports.deleteImageById=async(req,res)=>{try{if(!isId(req.params.id))return res.status(404).json({error:'Gallery image not found'});const result=await query('DELETE FROM galleries WHERE id=$1 RETURNING id',[req.params.id]);if(!result.rowCount)return res.status(404).json({error:'Gallery image not found'});return res.status(200).json({message:'Gallery image removed'});}catch(e){console.error('Gallery image removal failed:',e.message);return res.status(500).json({error:'Unable to remove this image right now'});}};
