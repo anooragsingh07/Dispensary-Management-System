@@ -26,6 +26,10 @@ const Home = ({ showLoader, hideLoader, user }) => {
   ];
 
   const activeSection = sections.find((section) => section.key === page) || sections[0];
+  const openCareTeam = () => {
+    setPage('Staff');
+    document.getElementById('home-discover')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   const renderSection = () => {
     switch (page) {
       case 'Staff': return <Staff showLoader={showLoader} hideLoader={hideLoader} />;
@@ -55,7 +59,11 @@ const Home = ({ showLoader, hideLoader, user }) => {
           <div className="preview-heading"><p className="preview-kicker">YOUR HEALTH CENTRE</p><h2>Everything in<br />one place.</h2><p>Support for every campus day.</p></div>
           <div className="preview-links">
             <Link to="/stock" className="preview-link"><span className="preview-link-icon"><Inventory2OutlinedIcon /></span><span><strong>Medicine stock</strong><small>Check current availability</small></span><ArrowForwardRoundedIcon /></Link>
-            <div className="preview-link"><span className="preview-link-icon preview-link-muted"><PeopleAltOutlinedIcon /></span><span><strong>Care team</strong><small>Meet your health-centre staff</small></span><ArrowForwardRoundedIcon /></div>
+            <button type="button" className="preview-link preview-link-button" onClick={openCareTeam} aria-label="View the health-centre care team">
+              <span className="preview-link-icon preview-link-muted"><PeopleAltOutlinedIcon /></span>
+              <span><strong>Care team</strong><small>Meet your health-centre staff</small></span>
+              <ArrowForwardRoundedIcon />
+            </button>
           </div>
           <div className="preview-footnote"><span className="preview-mini-avatar">CG</span><span>Made for the CGC campus community</span></div>
         </div>
@@ -67,7 +75,7 @@ const Home = ({ showLoader, hideLoader, user }) => {
         <div><span className="benefit-number">03</span><span><strong>Private student access</strong><small>Your visit history stays in your account</small></span></div>
       </section>
 
-      <section className="home-discover">
+      <section className="home-discover" id="home-discover">
         <div className="discover-heading">
           <div><p className="eyebrow">CAMPUS HEALTH, MADE SIMPLE</p><h2>Find what you need.</h2></div>
           <p>Explore the people and services supporting student wellbeing at CGC Landran.</p>

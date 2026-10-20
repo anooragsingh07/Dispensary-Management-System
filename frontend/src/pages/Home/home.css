@@ -69,6 +69,8 @@
 }
 
 .preview-link:hover { border-color: #b6b6ef; background: #fafaff; }
+.preview-link-button { width: 100%; background: #fff; font: inherit; text-align: left; cursor: pointer; }
+.preview-link-button:focus-visible { outline-offset: 3px; }
 .preview-link-icon { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 7px; background: #eeeeff; color: var(--brand); }
 .preview-link-icon .MuiSvgIcon-root { font-size: 19px; }
 .preview-link-icon.preview-link-muted { background: #f1f2f4; color: #586171; }
@@ -88,7 +90,7 @@
 .home-benefits strong { color: #242833; font-size: 12px; font-weight: 600; }
 .home-benefits small { color: var(--muted); font-size: 11px; line-height: 1.5; }
 
-.home-discover { padding: 78px 0 0; }
+.home-discover { padding: 78px 0 0; scroll-margin-top: 88px; }
 .discover-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 25px; }
 .discover-heading .eyebrow { margin-bottom: 11px; }
 .discover-heading h2 { margin: 0; color: #17191f; font-size: clamp(30px, 4vw, 42px); font-weight: 650; letter-spacing: -.06em; }
