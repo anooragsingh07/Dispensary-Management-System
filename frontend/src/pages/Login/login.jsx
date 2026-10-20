@@ -9,7 +9,8 @@ import axios from '@/api/client';
 const Login = (props) => {
   const navigate = useNavigate();
   const [loginField, setLoginField] = useState({ email: '', password: '' });
-  const [registerField, setRegisterField] = useState({ name: '', email: '', password: '', roll: '' });
+  const [registerField, setRegisterField] = useState({ name: '', email: '', password: '', roll: '', employeeId: '' });
+  const [accountType, setAccountType] = useState('student');
 
   const handleOnChange = (event, key, card) => {
     if (card === 'login') setLoginField({ ...loginField, [key]: event.target.value });
@@ -18,7 +19,7 @@ const Login = (props) => {
 
   const saveLogin = (user) => {
     props.handleLogin(user);
-    navigate(user.role === 'student' ? '/student/' + user._id : '/admin/dashboard');
+    navigate(['student', 'employee'].includes(user.role) ? '/student/' + user._id : '/admin/dashboard');
   };
 
   const handleLogin = async () => {
@@ -33,10 +34,13 @@ const Login = (props) => {
   };
 
   const handleRegister = async () => {
-    if (!registerField.name.trim() || !registerField.email.trim() || !registerField.password.trim() || !registerField.roll.trim()) return toast.error('Please enter all the details');
+    const campusId = accountType === 'employee' ? registerField.employeeId : registerField.roll;
+    if (!registerField.name.trim() || !registerField.email.trim() || !registerField.password.trim() || !campusId.trim()) return toast.error('Please enter all the details');
     if (registerField.password.length < 8) return toast.error('Use a password with at least 8 characters');
     props.showLoader();
-    await axios.post('/api/auth/register', registerField, { withCredentials: true }).then((resp) => {
+    const registration = { name: registerField.name, email: registerField.email, password: registerField.password, accountType };
+    registration[accountType === 'employee' ? 'employeeId' : 'roll'] = campusId;
+    await axios.post('/api/auth/register', registration, { withCredentials: true }).then((resp) => {
       toast.success(resp.data.message);
       saveLogin(resp.data.user);
     }).catch((err) => {
@@ -46,12 +50,11 @@ const Login = (props) => {
 
   return (
     <main className="login-page">
-      <section className="login-intro">
+      <header className="auth-page-heading">
         <p className="eyebrow"><span className="eyebrow-dot" /> CGC Landran Health Centre</p>
-        <h1>Your campus<br /><span>care starts here.</span></h1>
-        <p>Sign in to view your health visits, or create a student account to get started with the campus dispensary.</p>
-        <div className="login-intro-note"><span><LockOutlinedIcon /></span><span><strong>Private by design</strong><small>Your health information is available only through your account.</small></span></div>
-      </section>
+        <h1>Your campus care, all in one place.</h1>
+        <p>Sign in or create an account to access campus health services.</p>
+      </header>
 
       <section className="login-cards" aria-label="Account access">
         <form className="login-page-card" onSubmit={(event) => { event.preventDefault(); handleLogin(); }}>
@@ -61,19 +64,25 @@ const Login = (props) => {
             <label className="auth-field"><span>Password</span><input className="form-input" type="password" autoComplete="current-password" placeholder="Enter your password" value={loginField.password} onChange={(event) => handleOnChange(event, 'password', 'login')} required /></label>
           </div>
           <button className="form-btn" type="submit">Sign in <ArrowForwardRoundedIcon fontSize="small" /></button>
-          <p className="auth-card-footnote">For students and authorized dispensary staff.</p>
+          <p className="auth-card-footnote"><LockOutlinedIcon fontSize="small" /> For students, college employees and authorized dispensary staff.</p>
         </form>
 
         <form className="signup-page-card" onSubmit={(event) => { event.preventDefault(); handleRegister(); }}>
-          <div className="auth-card-heading"><span className="auth-card-step">02</span><div><h2>New to the centre?</h2><p>Create your student account.</p></div></div>
+          <div className="auth-card-heading"><span className="auth-card-step">02</span><div><h2>New to the centre?</h2><p>Create your campus health account.</p></div></div>
+          <div className="auth-account-switch" role="group" aria-label="Choose account type">
+            <button type="button" className={accountType === 'student' ? 'selected' : ''} aria-pressed={accountType === 'student'} onClick={() => setAccountType('student')}>Student</button>
+            <button type="button" className={accountType === 'employee' ? 'selected' : ''} aria-pressed={accountType === 'employee'} onClick={() => setAccountType('employee')}>College employee</button>
+          </div>
           <div className="form-input-fields">
             <label className="auth-field"><span>Full name</span><input className="form-input" type="text" autoComplete="name" placeholder="Your name" value={registerField.name} onChange={(event) => handleOnChange(event, 'name', 'register')} required /></label>
             <label className="auth-field"><span>Email address</span><input className="form-input" type="email" autoComplete="email" placeholder="you@college.edu" value={registerField.email} onChange={(event) => handleOnChange(event, 'email', 'register')} required /></label>
             <label className="auth-field"><span>Password</span><input className="form-input" type="password" minLength={8} autoComplete="new-password" placeholder="At least 8 characters" value={registerField.password} onChange={(event) => handleOnChange(event, 'password', 'register')} required /></label>
-            <label className="auth-field"><span>Student roll number</span><input className="form-input" type="text" placeholder="Your roll number" value={registerField.roll} onChange={(event) => handleOnChange(event, 'roll', 'register')} required /></label>
+            {accountType === 'student'
+              ? <label className="auth-field"><span>Student roll number</span><input className="form-input" type="text" autoComplete="off" placeholder="Your roll number" value={registerField.roll} onChange={(event) => handleOnChange(event, 'roll', 'register')} required /></label>
+              : <label className="auth-field"><span>College employee ID</span><input className="form-input" type="text" autoComplete="off" placeholder="Your employee ID" value={registerField.employeeId} onChange={(event) => handleOnChange(event, 'employeeId', 'register')} required /></label>}
           </div>
-          <button className="form-btn" type="submit">Create student account <ArrowForwardRoundedIcon fontSize="small" /></button>
-          <p className="auth-card-footnote">Registration is for students. Staff accounts are set up by an administrator.</p>
+          <button className="form-btn" type="submit">Create {accountType === 'employee' ? 'employee' : 'student'} account <ArrowForwardRoundedIcon fontSize="small" /></button>
+          <p className="auth-card-footnote">Use your college-issued {accountType === 'employee' ? 'employee ID' : 'student roll number'}. Dispensary staff accounts are set up by an administrator.</p>
         </form>
       </section>
       <ToastContainer />

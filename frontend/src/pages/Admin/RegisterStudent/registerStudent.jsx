@@ -12,7 +12,7 @@ import ConsultationDetails from '../../../components/ConsultationDetails/consult
 import { toast, ToastContainer } from 'react-toastify';
 import axios from '@/api/client';
 
-const emptyStudent = { _id: '', email: '', name: '', roll: '', mobileNo: '', fatherName: '', fatherMobile: '', address: '', previous_health: '', age: '', bloodGroup: '' };
+const emptyStudent = { _id: '', email: '', name: '', roll: '', employeeId: '', recordType: 'student', mobileNo: '', fatherName: '', fatherMobile: '', address: '', previous_health: '', age: '', bloodGroup: '' };
 const formatDate = (value) => value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Date unavailable';
 
 const RegisterStudent = (props) => {
@@ -41,7 +41,9 @@ const RegisterStudent = (props) => {
         else setConsultations([]);
     }, [studentDetail._id, fetchConsultations]);
 
-    const handleOnChangeInputField = (event, key) => setStudentDetail((current) => ({ ...current, [key]: event.target.value }));
+    const handleOnChangeInputField = (event, key) => setStudentDetail((current) => key === 'employeeId'
+        ? ({ ...current, employeeId: event.target.value, roll: event.target.value })
+        : ({ ...current, [key]: event.target.value }));
     const closeConsultationForm = () => setReportModal(false);
     const openConsultationForm = () => {
         if (!studentDetail?._id) return toast.error('Register or search for a student first');
@@ -50,7 +52,7 @@ const RegisterStudent = (props) => {
 
     const handleSearch = async () => {
         const roll = searchStudent.trim();
-        if (!roll) return toast.error('Enter a roll number to search');
+        if (!roll) return toast.error('Enter a student roll number or employee ID');
         props.showLoader();
         try {
             const { data } = await axios.get(`/api/auth/get-student/${encodeURIComponent(roll)}`);
@@ -68,12 +70,13 @@ const RegisterStudent = (props) => {
 
     const saveStudent = async (event) => {
         event.preventDefault();
-        const required = ['name', 'email', 'roll', 'mobileNo'];
-        if (required.some((key) => !String(studentDetail[key] || '').trim())) return toast.error('Name, email, roll number and mobile number are required');
+        const identity = studentDetail.recordType === 'employee' ? studentDetail.employeeId : studentDetail.roll;
+        const required = ['name', 'email', 'mobileNo'];
+        if (required.some((key) => !String(studentDetail[key] || '').trim()) || !String(identity || '').trim()) return toast.error(`Name, email, ${studentDetail.recordType === 'employee' ? 'employee ID' : 'roll number'} and mobile number are required`);
         props.showLoader();
         try {
             if (studentDetail._id) {
-                const fields = ['name', 'email', 'roll', 'mobileNo', 'fatherName', 'fatherMobile', 'address', 'previous_health', 'age', 'bloodGroup'];
+                const fields = ['name', 'email', 'roll', 'employeeId', 'recordType', 'mobileNo', 'fatherName', 'fatherMobile', 'address', 'previous_health', 'age', 'bloodGroup'];
                 const profile = Object.fromEntries(fields.map((field) => [field, studentDetail[field]]));
                 const { data } = await axios.put(`/api/auth/update-student/${studentDetail._id}`, profile);
                 setStudentDetail({ ...emptyStudent, ...data.student });
@@ -135,15 +138,15 @@ const RegisterStudent = (props) => {
 
     return <main className="register-student">
         <div className="go-back"><Link to="/admin/dashboard"><ArrowBackIcon /> Back to dashboard</Link></div>
-        <SearchBox handleClick={handleSearch} placeholder="Search by roll number" value={searchStudent} onChange={setSearchStudent} />
+        <SearchBox handleClick={handleSearch} placeholder="Search by roll number or employee ID" value={searchStudent} onChange={setSearchStudent} />
 
         <section className="register-form-block">
-            <div className="register-form-header">{studentDetail._id ? 'Student profile' : 'Register student'}</div>
+            <div className="register-form-header">{studentDetail._id ? `${studentDetail.recordType === 'employee' ? 'Employee' : 'Student'} profile` : 'Register student'}</div>
             <form className="register-form" onSubmit={saveStudent}>
                 <div className="register-form-div">
                     <div className="register-input-box"><input aria-label="Student name" autoComplete="name" required maxLength="120" value={studentDetail.name} onChange={(event) => handleOnChangeInputField(event, 'name')} className="input-box-register" placeholder="Student Name" type="text" /></div>
                     <div className="register-input-box"><input aria-label="Student email" autoComplete="email" required maxLength="254" value={studentDetail.email} onChange={(event) => handleOnChangeInputField(event, 'email')} className="input-box-register" placeholder="Email" type="email" /></div>
-                    <div className="register-input-box"><input aria-label="Roll number" required maxLength="50" value={studentDetail.roll} onChange={(event) => handleOnChangeInputField(event, 'roll')} className="input-box-register" placeholder="Roll No." type="text" /></div>
+                    <div className="register-input-box"><input aria-label={studentDetail.recordType === 'employee' ? 'Employee ID' : 'Roll number'} required maxLength="50" value={studentDetail.recordType === 'employee' ? studentDetail.employeeId : studentDetail.roll} onChange={(event) => handleOnChangeInputField(event, studentDetail.recordType === 'employee' ? 'employeeId' : 'roll')} className="input-box-register" placeholder={studentDetail.recordType === 'employee' ? 'Employee ID' : 'Roll No.'} type="text" /></div>
                     <div className="register-input-box"><input aria-label="Student mobile number" autoComplete="tel" required value={studentDetail.mobileNo} onChange={(event) => handleOnChangeInputField(event, 'mobileNo')} className="input-box-register" placeholder="Mobile No." type="tel" /></div>
                     <div className="register-input-box"><input aria-label="Father or guardian name" value={studentDetail.fatherName} onChange={(event) => handleOnChangeInputField(event, 'fatherName')} className="input-box-register" placeholder="Father / Guardian Name" type="text" /></div>
                     <div className="register-input-box"><input aria-label="Guardian mobile number" value={studentDetail.fatherMobile} onChange={(event) => handleOnChangeInputField(event, 'fatherMobile')} className="input-box-register" placeholder="Guardian Mobile No." type="tel" /></div>

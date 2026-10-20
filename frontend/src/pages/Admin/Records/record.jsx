@@ -93,12 +93,12 @@ const Record = (props) => {
     }
 
     const handleClick = async () => {
-        if (studentRoll.trim().length === 0) return toast.error("Please Enter Correct Roll No.");
+        if (studentRoll.trim().length === 0) return toast.error("Enter a student roll number or employee ID");
         props.showLoader()
         await axios.get(`/api/auth/get-student/${encodeURIComponent(studentRoll.trim())}`).then(async resp => {
             const history = await axios.get(`/api/consultations/student/${resp.data.student._id}`);
             if ((history.data.consultations || []).length === 0) {
-                return toast.error("No records found for this roll number")
+                return toast.error("No records found for this campus ID")
             }
             setSelecetedAllDetaisl(history.data.consultations)
             setAllRecordModal(true)
@@ -112,7 +112,7 @@ const Record = (props) => {
         <div className='records'>
             <div className='go-back'><Link to={'/admin/dashboard'}><ArrowBackIcon /> Back To Dashboard</Link></div>
 
-            <SearchBox handleClick={handleClick} value={studentRoll} onChange={onChangeField} placeholder="Search By Roll No." />
+            <SearchBox handleClick={handleClick} value={studentRoll} onChange={onChangeField} placeholder="Search by roll number or employee ID" />
 
             <div className='record-date-block'>
                 Select year
@@ -142,8 +142,8 @@ const Record = (props) => {
                 <div className='report-form-rows'>
                     <div className='report-form-header'>
                         <div className=''>View</div>
-                        <div className='col-2-mng'>Student Name</div>
-                        <div className='col-2-mng'>Roll No.</div>
+                        <div className='col-2-mng'>Patient name</div>
+                        <div className='col-2-mng'>Campus ID</div>
                         <div className='col-3-mng'>Date</div>
                     </div>
 
@@ -154,7 +154,7 @@ const Record = (props) => {
                                     <div className='report-form-row' key={item._id}>
                                         <div><button type='button' className='icon-action' aria-label={`View visit record for ${item.studentId?.name || item.studentId?.roll || 'student'}`} title='View record' onClick={() => handleOnOpenModal(item)}><RemoveRedEyeIcon /></button></div>
                                         <div className='col-2-mng'>{item.studentId?.name || "N/A"}</div>
-                                        <div className='col-2-mng'>{item.studentId?.roll || "N/A"}</div>
+                                        <div className='col-2-mng'>{item.studentId?.recordType === 'employee' ? item.studentId?.employeeId || item.studentId?.roll || 'N/A' : item.studentId?.roll || "N/A"}</div>
                                         <div className='col-3-mng'>{item.visitAt ? new Date(item.visitAt).toLocaleDateString('en-IN') : 'Date unavailable'}</div>
                                     </div>
                                 );

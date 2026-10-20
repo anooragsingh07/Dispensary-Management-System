@@ -120,7 +120,7 @@ const buildPrescriptionRows = async (rows, reserved) => {
     return result;
 };
 
-const consultationPopulate = [{ path: 'studentId', select: 'name roll bloodGroup previous_health' }, { path: 'doctorId', select: 'name email designation' }];
+const consultationPopulate = [{ path: 'studentId', select: 'name roll employeeId recordType bloodGroup previous_health' }, { path: 'doctorId', select: 'name email designation' }];
 
 exports.createConsultation = async (req, res) => {
     const reserved = [];
@@ -182,7 +182,7 @@ exports.getStudentConsultations = async (req, res) => {
 exports.getMyConsultations = async (req, res) => {
     try {
         const studentId = req.user.studentId?._id || req.user.studentId;
-        if (!studentId) return res.status(403).json({ error: 'Your account is not linked to a student profile' });
+        if (!studentId) return res.status(403).json({ error: 'Your account is not linked to a patient profile' });
         // The authenticated account determines studentId. Never accept an ID from the request here.
         const consultations = await Consultation.find({ studentId }).select('-clinicalNotes').populate('doctorId', 'name designation').sort({ visitAt: 1 }).lean();
         const ids = consultations.map((visit) => visit._id);

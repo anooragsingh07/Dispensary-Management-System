@@ -16,7 +16,7 @@ import './home.css';
 
 const Home = ({ showLoader, hideLoader, user }) => {
   const [page, setPage] = useState('About');
-  const dashboardPath = user?.role === 'student' ? '/student/' + user._id : '/admin/dashboard';
+  const dashboardPath = ['student', 'employee'].includes(user?.role) ? '/student/' + user._id : '/admin/dashboard';
   const sections = [
     { key: 'About', label: 'About the centre', icon: <HomeOutlinedIcon /> },
     { key: 'Staff', label: 'Staff directory', icon: <PeopleAltOutlinedIcon /> },

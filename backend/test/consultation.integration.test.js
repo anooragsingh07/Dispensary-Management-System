@@ -9,7 +9,7 @@ try {
     safeTestDatabase = /test/i.test(decodeURIComponent(parsed.pathname.replace(/^\//, '').split('/')[0] || ''));
 } catch {}
 
-test('student registration, roll lookup, consultation, prescription, history and RBAC', { skip: !safeTestDatabase }, async () => {
+test('student and employee registration, campus-ID lookup, consultation, prescription, history and RBAC', { skip: !safeTestDatabase }, async () => {
     process.env.MONGO_URI = testMongoUri;
     process.env.NODE_ENV = 'test';
     process.env.JWT_SECRET = `integration-${require('crypto').randomBytes(32).toString('hex')}`;
@@ -25,12 +25,16 @@ test('student registration, roll lookup, consultation, prescription, history and
     const AuditLog = require('../Models/auditLog');
     const tag = require('crypto').randomBytes(5).toString('hex').toUpperCase();
     const email = `integration.${tag.toLowerCase()}@example.test`;
+    const employeeEmail = `employee.${tag.toLowerCase()}@example.test`;
     const roll = `TEST-${tag}`;
+    const employeeId = `EMP-${tag}`;
     let server;
     let doctor;
     let student;
+    let employeeProfileId;
     let medicine;
     let consultationId;
+    let employeeConsultationId;
     try {
         await connectDatabase();
         doctor = await User.create({ name: 'Integration Doctor', email: `doctor.${tag.toLowerCase()}@example.test`, password: await bcrypt.hash('integration-password-1', 10), role: 'doctor', designation: 'Doctor' });
@@ -47,6 +51,21 @@ test('student registration, roll lookup, consultation, prescription, history and
         assert.ok(student);
         const studentCookie = cookieFrom(registration);
 
+        const missingEmployeeId = await request('/api/auth/register', { method: 'POST', body: JSON.stringify({ accountType: 'employee', name: 'Integration Employee', email: employeeEmail, password: 'employee-password-1' }) });
+        assert.equal(missingEmployeeId.status, 400);
+
+        const employeeRegistration = await request('/api/auth/register', { method: 'POST', body: JSON.stringify({ accountType: 'employee', name: 'Integration Employee', employeeId, email: employeeEmail, password: 'employee-password-1' }) });
+        assert.equal(employeeRegistration.status, 201);
+        const employeeBody = await employeeRegistration.json();
+        employeeProfileId = employeeBody.user.studentId;
+        const employeeCookie = cookieFrom(employeeRegistration);
+        assert.equal(employeeBody.user.role, 'employee');
+        assert.equal(employeeBody.user.recordType, 'employee');
+        assert.equal(employeeBody.user.employeeId, employeeId);
+
+        const duplicateEmployeeId = await request('/api/auth/register', { method: 'POST', body: JSON.stringify({ accountType: 'employee', name: 'Duplicate Employee', employeeId, email: `duplicate.${tag.toLowerCase()}@example.test`, password: 'employee-password-1' }) });
+        assert.equal(duplicateEmployeeId.status, 409);
+
         const duplicate = await request('/api/auth/register', { method: 'POST', body: JSON.stringify({ name: 'Duplicate Student', roll, email: `duplicate.${tag.toLowerCase()}@example.test`, password: 'student-password-1' }) });
         assert.equal(duplicate.status, 409);
 
@@ -57,6 +76,13 @@ test('student registration, roll lookup, consultation, prescription, history and
         assert.equal(lookup.status, 200);
         const foundStudent = (await lookup.json()).student;
         assert.equal(foundStudent._id, student);
+
+        const employeeLookup = await request(`/api/auth/get-student/${employeeId}`, { headers: { cookie: doctorCookie } });
+        assert.equal(employeeLookup.status, 200);
+        const foundEmployee = (await employeeLookup.json()).student;
+        assert.equal(foundEmployee._id, employeeProfileId);
+        assert.equal(foundEmployee.recordType, 'employee');
+        assert.equal(foundEmployee.employeeId, employeeId);
 
         medicine = await Medicine.create({ name: `Integration Paracetamol ${tag}`, quantity: 10, usage: 'Test only', addedBy: doctor._id });
         const invalid = await request('/api/consultations', { method: 'POST', headers: { cookie: doctorCookie }, body: JSON.stringify({ studentId: student, chiefComplaint: '', diagnosis: '' }) });
@@ -92,17 +118,36 @@ test('student registration, roll lookup, consultation, prescription, history and
         assert.equal('clinicalNotes' in studentHistory[0], false);
         const forbidden = await request(`/api/consultations/student/${student}`, { headers: { cookie: studentCookie } });
         assert.equal(forbidden.status, 403);
+
+        const employeeVisit = await request('/api/consultations', {
+            method: 'POST', headers: { cookie: doctorCookie }, body: JSON.stringify({
+                studentId: employeeProfileId, visitAt: new Date().toISOString(), chiefComplaint: 'Seasonal allergy', symptoms: 'Sneezing',
+                diagnosis: 'Seasonal allergy', doctorAdvice: 'Avoid known triggers',
+            }),
+        });
+        assert.equal(employeeVisit.status, 201);
+        employeeConsultationId = (await employeeVisit.json()).consultation._id;
+
+        const employeeHistory = await request('/api/consultations/mine', { headers: { cookie: employeeCookie } });
+        assert.equal(employeeHistory.status, 200);
+        const employeeVisits = (await employeeHistory.json()).consultations;
+        assert.equal(employeeVisits.length, 1);
+        assert.equal(employeeVisits[0].chiefComplaint, 'Seasonal allergy');
+        assert.equal('clinicalNotes' in employeeVisits[0], false);
     } finally {
         if (server) await new Promise((resolve) => server.close(resolve));
-        if (consultationId) {
-            await Promise.all([Prescription.deleteMany({ consultationId }), AuditLog.deleteMany({ consultationId }), Consultation.deleteOne({ _id: consultationId })]);
+        const consultationIds = [consultationId, employeeConsultationId].filter(Boolean);
+        if (consultationIds.length) {
+            await Promise.all([Prescription.deleteMany({ consultationId: { $in: consultationIds } }), AuditLog.deleteMany({ consultationId: { $in: consultationIds } }), Consultation.deleteMany({ _id: { $in: consultationIds } })]);
         }
         if (medicine?._id) await Medicine.deleteOne({ _id: medicine._id });
         if (student) {
             const studentId = student._id || student;
-            await Student.deleteOne({ _id: studentId });
-            await User.deleteMany({ $or: [{ studentId }, { email }] });
+            const personIds = [studentId, employeeProfileId].filter(Boolean);
+            await Student.deleteMany({ _id: { $in: personIds } });
+            await User.deleteMany({ studentId: { $in: personIds } });
         }
+        if (email || employeeEmail) await User.deleteMany({ email: { $in: [email, employeeEmail].filter(Boolean) } });
         if (doctor?._id) await User.deleteOne({ _id: doctor._id });
         await mongoose.disconnect();
     }

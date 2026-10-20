@@ -23,24 +23,30 @@ const isPhone = (phone) => {
     return /^\+?[0-9][0-9\s().-]{5,22}$/.test(value) && digits >= 7 && digits <= 15;
 };
 
-const studentFields = ['name', 'roll', 'mobileNo', 'fatherName', 'fatherMobile', 'address', 'previous_health', 'age', 'bloodGroup'];
+const studentFields = ['name', 'roll', 'employeeId', 'recordType', 'mobileNo', 'fatherName', 'fatherMobile', 'address', 'previous_health', 'age', 'bloodGroup'];
 const allowedBloodGroups = new Set(['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
 
 const normalizeStudentFields = (body, current = {}, { requireMobile = true } = {}) => {
     const data = Object.fromEntries(studentFields
-        .filter((field) => Object.prototype.hasOwnProperty.call(current, field))
+        .filter((field) => !['roll', 'employeeId', 'recordType'].includes(field) && Object.prototype.hasOwnProperty.call(current, field))
         .map((field) => [field, current[field]]));
     for (const field of studentFields) {
-        if (!Object.prototype.hasOwnProperty.call(body, field)) continue;
+        if (['roll', 'employeeId', 'recordType'].includes(field) || !Object.prototype.hasOwnProperty.call(body, field)) continue;
         const value = body[field];
-        data[field] = field === 'roll'
-            ? normalizeRoll(value)
-            : field === 'age'
-                ? (String(value ?? '').trim() ? Number(value) : undefined)
-                : String(value ?? '').trim();
+        data[field] = field === 'age'
+            ? (String(value ?? '').trim() ? Number(value) : undefined)
+            : String(value ?? '').trim();
     }
+    const recordType = current.recordType || String(body.recordType || 'student').trim().toLowerCase();
+    if (!['student', 'employee'].includes(recordType)) return { error: 'Choose student or college employee registration' };
+    const campusId = recordType === 'employee'
+        ? normalizeRoll(body.employeeId ?? body.roll ?? current.employeeId ?? current.roll)
+        : normalizeRoll(body.roll ?? current.roll);
+    data.recordType = recordType;
+    data.roll = campusId;
+    data.employeeId = recordType === 'employee' ? campusId : '';
     if (!data.name || data.name.length > 120) return { error: 'Enter a student name of 1 to 120 characters' };
-    if (!data.roll || data.roll.length > 50) return { error: 'Enter a roll number of 1 to 50 characters' };
+    if (!campusId || campusId.length > 50) return { error: recordType === 'employee' ? 'Enter an employee ID of 1 to 50 characters' : 'Enter a roll number of 1 to 50 characters' };
     if (requireMobile && !data.mobileNo) return { error: 'Student mobile number is required' };
     if (data.mobileNo && (data.mobileNo.length > 24 || !isPhone(data.mobileNo))) return { error: 'Enter a valid student mobile number' };
     if (data.fatherName?.length > 120) return { error: 'Guardian name must be 120 characters or fewer' };
@@ -59,7 +65,7 @@ const sanitizeUser = (user) => {
     const profile = plainUser.studentId && typeof plainUser.studentId === 'object'
         ? plainUser.studentId
         : null;
-    if (plainUser.role === 'student' && profile) {
+    if (['student', 'employee'].includes(plainUser.role) && profile) {
         plainUser.studentId = profile._id;
         for (const field of studentFields) {
             plainUser[field] = profile[field] ?? '';
@@ -74,13 +80,13 @@ const studentResponse = (student, user) => ({
     userId: user?._id || null,
 });
 
-const createStudentAccount = async ({ profile, email, password }) => {
+const createStudentAccount = async ({ profile, email, password, role = 'student' }) => {
     const student = await Student.create(profile);
     try {
         const user = await User.create({
             email,
             password: await bcrypt.hash(password, 12),
-            role: 'student',
+            role,
             studentId: student._id,
         });
         return { student, user };
@@ -102,27 +108,29 @@ exports.register = async (req, res) => {
         const name = String(req.body.name || '').trim();
         const email = normalizeEmail(req.body.email);
         const password = String(req.body.password || '');
-        const roll = normalizeRoll(req.body.roll);
+        const accountType = String(req.body.accountType || 'student').trim().toLowerCase();
+        const campusId = accountType === 'employee' ? normalizeRoll(req.body.employeeId) : normalizeRoll(req.body.roll);
 
-        if (!name || !email || !password || !roll) return res.status(400).json({ error: 'Name, email, password and roll number are required' });
-        if (name.length > 120 || !isEmail(email) || password.length < 8 || password.length > 128 || roll.length > 50) {
-            return res.status(400).json({ error: 'Enter a valid name, email, roll number and a password of at least 8 characters' });
+        if (!['student', 'employee'].includes(accountType)) return res.status(400).json({ error: 'Choose student or college employee registration' });
+        if (!name || !email || !password || !campusId) return res.status(400).json({ error: `Name, email, password and ${accountType === 'employee' ? 'employee ID' : 'roll number'} are required` });
+        if (name.length > 120 || !isEmail(email) || password.length < 8 || password.length > 128 || campusId.length > 50) {
+            return res.status(400).json({ error: `Enter a valid name, email, ${accountType === 'employee' ? 'employee ID' : 'roll number'} and a password of at least 8 characters` });
         }
 
-        const normalized = normalizeStudentFields({ ...req.body, name, roll }, {}, { requireMobile: false });
+        const normalized = normalizeStudentFields({ ...req.body, name, roll: campusId, employeeId: accountType === 'employee' ? campusId : '', recordType: accountType }, {}, { requireMobile: false });
         if (normalized.error) return res.status(400).json({ error: normalized.error });
-        if (await User.exists({ email }) || await Student.exists({ roll })) {
-            return res.status(409).json({ error: 'An account already exists with that email or roll number' });
+        if (await User.exists({ email }) || await Student.exists({ roll: campusId })) {
+            return res.status(409).json({ error: 'An account already exists with that email or campus ID' });
         }
 
-        const { user, student } = await createStudentAccount({ profile: normalized.data, email, password });
+        const { user, student } = await createStudentAccount({ profile: normalized.data, email, password, role: accountType });
         setAuthCookie(res, user);
         return res.status(201).json({
-            message: 'Your student account is ready',
+            message: accountType === 'employee' ? 'Your college employee account is ready' : 'Your student account is ready',
             user: sanitizeUser({ ...user.toObject(), studentId: student.toObject() }),
         });
     } catch (error) {
-        if (error.code === 11000) return res.status(409).json({ error: 'An account already exists with that email or roll number' });
+        if (error.code === 11000) return res.status(409).json({ error: 'An account already exists with that email or campus ID' });
         console.error('Student registration failed:', error);
         return res.status(500).json({ error: 'Unable to create your account right now' });
     }
@@ -159,7 +167,7 @@ exports.updateStudentById = async (req, res) => {
         const profileResult = normalizeStudentFields(req.body, student.toObject());
         if (profileResult.error) return res.status(400).json({ error: profileResult.error });
         if (await User.exists({ _id: { $ne: user._id }, email })) return res.status(409).json({ error: 'That email belongs to another account' });
-        if (await Student.exists({ _id: { $ne: student._id }, roll: profileResult.data.roll })) return res.status(409).json({ error: 'That roll number belongs to another student' });
+        if (await Student.exists({ _id: { $ne: student._id }, roll: profileResult.data.roll })) return res.status(409).json({ error: 'That campus ID belongs to another patient' });
 
         const previousEmail = user.email;
         user.email = email;
@@ -172,7 +180,7 @@ exports.updateStudentById = async (req, res) => {
             await user.save().catch(() => {});
             throw error;
         }
-        return res.status(200).json({ message: 'Student details updated', student: studentResponse(student, user) });
+        return res.status(200).json({ message: student.recordType === 'employee' ? 'Employee details updated' : 'Student details updated', student: studentResponse(student, user) });
     } catch (error) {
         if (error.code === 11000) return res.status(409).json({ error: 'That email or roll number belongs to another account' });
         console.error('Student update failed:', error);
@@ -200,7 +208,7 @@ exports.issueStudentTemporaryPassword = async (req, res) => {
         if (!student) return res.status(404).json({ error: 'Student not found' });
 
         const user = await User.findOne({ studentId: student._id });
-        if (!user || user.role !== 'student') return res.status(404).json({ error: 'Student login account not found' });
+        if (!user || !['student', 'employee'].includes(user.role)) return res.status(404).json({ error: 'Student or employee login account not found' });
 
         const temporaryPassword = crypto.randomBytes(9).toString('base64url');
         user.password = await bcrypt.hash(temporaryPassword, 12);
@@ -208,7 +216,7 @@ exports.issueStudentTemporaryPassword = async (req, res) => {
         await user.save();
 
         return res.status(200).json({
-            message: 'A new temporary password is active. Share it with the student.',
+            message: 'A new temporary password is active. Share it with the account holder.',
             email: user.email,
             temporaryPassword,
         });
@@ -221,7 +229,7 @@ exports.issueStudentTemporaryPassword = async (req, res) => {
 exports.registerStudentByStaff = async (req, res) => {
     try {
         const email = normalizeEmail(req.body.email);
-        const profileResult = normalizeStudentFields(req.body);
+        const profileResult = normalizeStudentFields({ ...req.body, recordType: 'student', employeeId: '' });
         if (!isEmail(email)) return res.status(400).json({ error: 'Enter a valid student email address' });
         if (profileResult.error) return res.status(400).json({ error: profileResult.error });
         if (await User.exists({ email }) || await Student.exists({ roll: profileResult.data.roll })) {

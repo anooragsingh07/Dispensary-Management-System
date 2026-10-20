@@ -4,22 +4,22 @@ A web portal for the campus health centre. Students can review their own medical
 
 ## Features
 
-- Student and staff sign-in and student self-registration.
+- Side-by-side sign-in and account creation for students and college employees.
 - Administrator setup through a one-time seed command; public sign-up cannot create staff or administrator accounts.
-- Student profiles with unique roll numbers, and consultation history linked to student IDs.
+- Student profiles with unique roll numbers and employee profiles with unique employee IDs; both use the same consultation history workflow.
 - Consultation records for complaints, symptoms, vitals, assessment, prescriptions, advice, precautions, follow-up and private clinical notes.
 - Prescription items linked to their consultation; selected stock items are reserved atomically when a dispense quantity is entered.
 - Student medical history is scoped to the signed-in student's profile. Private clinical notes are visible only to authorized clinical staff.
 - Medicine search and public stock view.
 - Staff directory, facility and hospital listings, notices, and photo gallery.
-- Role-checked administrator, doctor, authorized staff and student APIs backed by Express and MongoDB.
+- Role-checked administrator, doctor, authorized staff, student and employee APIs backed by Express and MongoDB.
 
 ## Medical-record data model
 
 The project uses MongoDB, so the requested relational tables are implemented as collections:
 
-- `students`: the profile and unique roll number.
-- `users`: login identity, hashed password, role and `studentId` link for student accounts.
+- `students`: student or employee patient profiles, with a unique campus ID and a `recordType` discriminator.
+- `users`: login identity, hashed password, role and `studentId` link for patient accounts.
 - `consultations`: one document per visit, linked with `studentId` and `doctorId`.
 - `prescriptions`: medicine instructions linked to `consultationId`, optionally linked to a stock `medicineId`.
 - `audit_logs`: consultation creation/update actor, record IDs and changed field names. Clinical field values are not copied into audit entries.
@@ -92,9 +92,9 @@ Keep real `.env` files and credentials out of Git. The repository ignores local 
 
 ## Workflow and permissions
 
-1. An administrator creates a doctor account from staff management by choosing the Doctor role. Authorized staff and administrators can also register/search student profiles.
+1. Students create an account with their roll number; college employees choose the employee option and use their employee ID. An administrator creates doctor and staff accounts from staff management. Authorized staff and administrators can register/search student profiles or search an employee by employee ID.
 2. From the student profile, clinical staff choose **New consultation**, enter the visit and assessment, add prescription instructions, and save. Each save creates a separate consultation; it does not replace earlier visits.
-3. A signed-in student sees only the profile linked to their account and their consultations, in chronological order. Student-facing APIs omit `clinicalNotes`. Administrators, doctors and authorized dispensary staff can view private notes from clinical record screens.
+3. A signed-in student or college employee sees only the profile linked to their account and their consultations, in chronological order. Patient-facing APIs omit `clinicalNotes`. Administrators, doctors and authorized dispensary staff can view private notes from clinical record screens.
 
 The doctor/staff dashboard routes require an authenticated role. Doctors can edit only consultations they created; administrators can edit any consultation; authorized staff can create and view clinical records but cannot edit them. Students cannot use clinician lookup/history endpoints, and their own history endpoint derives `studentId` from the authenticated session rather than a request parameter.
 

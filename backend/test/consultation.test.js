@@ -51,7 +51,9 @@ test('role guards reject students from clinical routes and clinicians from stude
         return { status, payload, nextCalled };
     };
     assert.equal(callGuard(Authentication.adminFacultyAuth[1], 'student').status, 403);
+    assert.equal(callGuard(Authentication.adminFacultyAuth[1], 'employee').status, 403);
     assert.equal(callGuard(Authentication.studentAuth[1], 'doctor').status, 403);
+    assert.equal(callGuard(Authentication.studentAuth[1], 'employee').nextCalled, true);
     assert.equal(callGuard(Authentication.adminFacultyAuth[1], 'doctor').nextCalled, true);
     assert.equal(callGuard(Authentication.adminStaffAuth[1], 'doctor').status, 403);
     assert.equal(callGuard(Authentication.adminStaffAuth[1], 'staff').nextCalled, true);
