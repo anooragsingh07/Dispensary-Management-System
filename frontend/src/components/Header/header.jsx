@@ -11,7 +11,8 @@ const Header = ({ isLogin, user, showLoader, hideLoader, handleLogin }) => {
   const [eventPopup, setEventPopup] = useState(false);
   const [helplinePopup, setHelplinePopup] = useState(false);
   const [events, setEvents] = useState([]);
-  const dashboardPath = user?.role === 'student' ? '/student/' + user._id : '/admin/dashboard';
+  const isPatient = ['student', 'employee'].includes(user?.role);
+  const dashboardPath = isPatient ? '/student/' + user._id : '/admin/dashboard';
   const initials = String(user?.name || 'User')
     .split(/\s+/)
     .map((part) => part[0])
@@ -44,30 +45,32 @@ const Header = ({ isLogin, user, showLoader, hideLoader, handleLogin }) => {
     <>
       <header className="app-header">
         <div className="header-inner">
-          <Link to="/" className="brand-lockup" aria-label="Campus Care home">
+          <Link to={isPatient ? dashboardPath : '/'} className="brand-lockup" aria-label="Campus Care home">
             <span className="brand-symbol"><LocalHospitalOutlinedIcon /></span>
             <span className="brand-copy"><strong>Campus Care</strong><small>CGC Landran</small></span>
           </Link>
 
           <nav className="navbar" aria-label="Main navigation">
             <div className="navbar-primary">
-              <NavLink to="/" end className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Overview</NavLink>
-              <NavLink to="/stock" className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Medicine stock</NavLink>
-              {isLogin && <NavLink to={dashboardPath} className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Workspace</NavLink>}
+              {isPatient ? <NavLink to={dashboardPath} className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>My visits</NavLink> : <>
+                <NavLink to="/" end className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Overview</NavLink>
+                <NavLink to="/stock" className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Medicine stock</NavLink>
+                {isLogin && <NavLink to={dashboardPath} className={({ isActive }) => 'nav-link' + (isActive ? ' is-active' : '')}>Workspace</NavLink>}
 
-              <div className="nav-popover-wrap" onMouseEnter={() => setEventPopup(true)} onMouseLeave={() => setEventPopup(false)}>
-                <button type="button" className={'nav-link nav-popover-trigger' + (eventPopup ? ' is-active' : '')} aria-expanded={eventPopup} onClick={() => setEventPopup((open) => !open)}>
-                  Notices <ArrowDropDownIcon fontSize="small" />
-                </button>
-                {eventPopup && <div className="nav-popover" role="region" aria-label="Notices">
-                  <p className="popover-eyebrow">Latest updates</p>
-                  {events.length ? events.map((event) => <div className="popup-notification" key={event._id}>{event.title}</div>) : <div className="popup-notification">No notices right now</div>}
-                </div>}
-              </div>
+                <div className="nav-popover-wrap" onMouseEnter={() => setEventPopup(true)} onMouseLeave={() => setEventPopup(false)}>
+                  <button type="button" className={'nav-link nav-popover-trigger' + (eventPopup ? ' is-active' : '')} aria-expanded={eventPopup} onClick={() => setEventPopup((open) => !open)}>
+                    Notices <ArrowDropDownIcon fontSize="small" />
+                  </button>
+                  {eventPopup && <div className="nav-popover" role="region" aria-label="Notices">
+                    <p className="popover-eyebrow">Latest updates</p>
+                    {events.length ? events.map((event) => <div className="popup-notification" key={event._id}>{event.title}</div>) : <div className="popup-notification">No notices right now</div>}
+                  </div>}
+                </div>
+              </>}
             </div>
 
             <div className="navbar-actions">
-              <div className="nav-popover-wrap" onMouseEnter={() => setHelplinePopup(true)} onMouseLeave={() => setHelplinePopup(false)}>
+              {!isPatient && <div className="nav-popover-wrap" onMouseEnter={() => setHelplinePopup(true)} onMouseLeave={() => setHelplinePopup(false)}>
                 <button type="button" className={'nav-link nav-popover-trigger' + (helplinePopup ? ' is-active' : '')} aria-expanded={helplinePopup} onClick={() => setHelplinePopup((open) => !open)}>
                   Help <ArrowDropDownIcon fontSize="small" />
                 </button>
@@ -77,7 +80,7 @@ const Header = ({ isLogin, user, showLoader, hideLoader, handleLogin }) => {
                   <div className="popup-notification"><strong>Health centre</strong><span>1346-257400</span></div>
                   <div className="popup-notification"><strong>Ambulance</strong><span>Available 24 hours</span></div>
                 </div>}
-              </div>
+              </div>}
               {isLogin ? <div className="header-user">
                 <Link to={dashboardPath} className="user-identity" aria-label={'Open workspace for ' + user?.name}>
                   <span className="user-avatar">{initials}</span>

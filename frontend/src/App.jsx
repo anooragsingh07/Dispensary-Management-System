@@ -52,8 +52,14 @@ function App() {
   const hideLoader = () => setLoader(false);
   const isStaff = ['admin', 'staff'].includes(user?.role);
   const isClinical = ['admin', 'doctor', 'staff'].includes(user?.role);
-  const isStudent = user?.role === 'student';
-  const dashboardPath = isStudent ? `/student/${user._id}` : '/admin/dashboard';
+  const isPatient = ['student', 'employee'].includes(user?.role);
+  const dashboardPath = isPatient ? `/student/${user._id}` : '/admin/dashboard';
+  const patientLanding = checkingSession
+    ? <div className="session-loading">Checking your session…</div>
+    : isPatient ? <Navigate to={dashboardPath} replace /> : <Home showLoader={showLoader} hideLoader={hideLoader} user={user} />;
+  const stockPage = checkingSession
+    ? <div className="session-loading">Checking your session…</div>
+    : isPatient ? <Navigate to={dashboardPath} replace /> : <Stock showLoader={showLoader} hideLoader={hideLoader} />;
 
   return (
     <div className="App">
@@ -65,9 +71,9 @@ function App() {
         handleLogin={handleLogin}
       />
       <Routes>
-        <Route path="/" element={<Home showLoader={showLoader} hideLoader={hideLoader} user={user} />} />
+        <Route path="/" element={patientLanding} />
         <Route path="/login" element={checkingSession ? null : user ? <Navigate to={dashboardPath} replace /> : <Login handleLogin={handleLogin} showLoader={showLoader} hideLoader={hideLoader} />} />
-        <Route path="/stock" element={<Stock showLoader={showLoader} hideLoader={hideLoader} />} />
+        <Route path="/stock" element={stockPage} />
         <Route path="/admin/dashboard" element={<AccessRoute loading={checkingSession} allowed={isClinical}><AdminDashboard user={user} showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
         <Route path="/admin/register-student" element={<AccessRoute loading={checkingSession} allowed={isClinical}><RegisterStudent showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
         <Route path="/admin/manage-medicine" element={<AccessRoute loading={checkingSession} allowed={isStaff}><ManageMedicine showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
@@ -75,10 +81,10 @@ function App() {
         <Route path="/admin/facility" element={<AccessRoute loading={checkingSession} allowed={isStaff}><Facility showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
         <Route path="/admin/near-by-hospital" element={<AccessRoute loading={checkingSession} allowed={isStaff}><NearByHospital showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
         <Route path="/admin/gallary" element={<AccessRoute loading={checkingSession} allowed={isStaff}><AdminGallary showLoader={showLoader} hideLoader={hideLoader} /></AccessRoute>} />
-        <Route path="/student/:id" element={<AccessRoute loading={checkingSession} allowed={isStudent}><StudentDashboard showLoader={showLoader} hideLoader={hideLoader} user={user} /></AccessRoute>} />
+        <Route path="/student/:id" element={<AccessRoute loading={checkingSession} allowed={isPatient}><StudentDashboard showLoader={showLoader} hideLoader={hideLoader} user={user} /></AccessRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <Footer />
+      {!isPatient && <Footer />}
       {loader && <GlobalLoader />}
     </div>
   );

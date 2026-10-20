@@ -8,21 +8,6 @@
 .student-identity-card > span:last-child { display: grid; gap: 4px; }
 .student-identity-card strong { max-width: 180px; overflow: hidden; color: #272a33; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .student-identity-card small { color: var(--muted); font-size: 10px; }
-.student-summary-row { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 12px; margin: 22px 0 36px; }
-.student-summary-item,
-.student-stock-link { min-height: 80px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); border-radius: 8px; padding: 15px; background: #fff; }
-.summary-icon { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 8px; background: #ededff; color: var(--brand); }
-.summary-icon .MuiSvgIcon-root { font-size: 19px; }
-.summary-count { min-width: 35px; color: var(--brand); font-size: 27px; font-weight: 700; letter-spacing: -.06em; text-align: center; }
-.student-summary-item > span:last-child,
-.student-stock-link > span { display: grid; gap: 5px; }
-.student-summary-item small,
-.student-stock-link small { color: #727a87; font-size: 9px; font-weight: 700; letter-spacing: .08em; }
-.student-summary-item strong,
-.student-stock-link strong { color: #252832; font-size: 11px; font-weight: 600; }
-.student-stock-link { justify-content: space-between; color: var(--ink); text-decoration: none; transition: border-color 140ms ease; }
-.student-stock-link:hover { border-color: #b9b9ec; }
-.student-stock-link > .MuiSvgIcon-root { color: var(--brand); font-size: 18px; }
 .student-visits { overflow: hidden; border: 1px solid var(--border); border-radius: 9px; background: #fff; }
 .student-visits-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid #ececef; padding: 19px 22px; }
 .student-visits-heading .eyebrow { margin-bottom: 7px; font-size: 9px; }
@@ -56,7 +41,6 @@
 @media (max-width: 760px) {
   .student-dashboard { padding-top: 36px; }
   .student-page-heading { align-items: flex-start; flex-direction: column; }
-  .student-summary-row { grid-template-columns: 1fr; margin: 18px 0 26px; }
   .student-profile-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
