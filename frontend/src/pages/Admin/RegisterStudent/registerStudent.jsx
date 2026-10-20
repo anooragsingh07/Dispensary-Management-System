@@ -44,9 +44,13 @@ const RegisterStudent = (props) => {
     const handleOnChangeInputField = (event, key) => setStudentDetail((current) => key === 'employeeId'
         ? ({ ...current, employeeId: event.target.value, roll: event.target.value })
         : ({ ...current, [key]: event.target.value }));
+    const selectRecordType = (recordType) => setStudentDetail((current) => {
+        if (current._id || current.recordType === recordType) return current;
+        return { ...current, recordType, roll: '', employeeId: '' };
+    });
     const closeConsultationForm = () => setReportModal(false);
     const openConsultationForm = () => {
-        if (!studentDetail?._id) return toast.error('Register or search for a student first');
+        if (!studentDetail?._id) return toast.error('Register or search for a patient first');
         setReportModal(true);
     };
 
@@ -59,12 +63,12 @@ const RegisterStudent = (props) => {
             const loadedStudent = { ...emptyStudent, ...data.student };
             setStudentDetail(loadedStudent);
             setCreatedStudentAccount((current) => current?.studentId === loadedStudent._id ? current : null);
-            toast.success('Student profile loaded');
+            toast.success(`${loadedStudent.recordType === 'employee' ? 'Employee' : 'Student'} profile loaded`);
         } catch (error) {
             setCreatedStudentAccount(null);
             setStudentDetail({ ...emptyStudent, roll: searchStudent });
             setConsultations([]);
-            toast.error(error?.response?.data?.error || 'No student found');
+            toast.error(error?.response?.data?.error || 'No patient found');
         } finally { props.hideLoader(); }
     };
 
@@ -80,7 +84,7 @@ const RegisterStudent = (props) => {
                 const profile = Object.fromEntries(fields.map((field) => [field, studentDetail[field]]));
                 const { data } = await axios.put(`/api/auth/update-student/${studentDetail._id}`, profile);
                 setStudentDetail({ ...emptyStudent, ...data.student });
-                toast.success(data.message || 'Student profile updated');
+                toast.success(data.message || 'Patient profile updated');
             } else {
                 const { data } = await axios.post('/api/auth/register-student', studentDetail);
                 setStudentDetail({ ...emptyStudent, ...data.student });
@@ -108,7 +112,7 @@ const RegisterStudent = (props) => {
 
     const issueTemporaryPassword = async () => {
         if (!studentDetail._id || issuingTemporaryPassword) return;
-        const confirmed = window.confirm(`Generate a new password for ${studentDetail.name}? This will replace the student's current sign-in password.`);
+        const confirmed = window.confirm(`Generate a new password for ${studentDetail.name}? This will replace the account holder's current sign-in password.`);
         if (!confirmed) return;
 
         setIssuingTemporaryPassword(true);
@@ -141,22 +145,31 @@ const RegisterStudent = (props) => {
         <SearchBox handleClick={handleSearch} placeholder="Search by roll number or employee ID" value={searchStudent} onChange={setSearchStudent} />
 
         <section className="register-form-block">
-            <div className="register-form-header">{studentDetail._id ? `${studentDetail.recordType === 'employee' ? 'Employee' : 'Student'} profile` : 'Register student'}</div>
+            <div className="register-form-header">{studentDetail._id ? `${studentDetail.recordType === 'employee' ? 'Employee' : 'Student'} profile` : 'Register a patient'}</div>
             <form className="register-form" onSubmit={saveStudent}>
+                {!studentDetail._id && <div className="patient-type-field">
+                    <span id="patient-type-label">Patient type</span>
+                    <div className="patient-type-switch" role="group" aria-labelledby="patient-type-label">
+                        <button type="button" className={studentDetail.recordType === 'student' ? 'selected' : ''} aria-pressed={studentDetail.recordType === 'student'} onClick={() => selectRecordType('student')}>Student</button>
+                        <button type="button" className={studentDetail.recordType === 'employee' ? 'selected' : ''} aria-pressed={studentDetail.recordType === 'employee'} onClick={() => selectRecordType('employee')}>College employee</button>
+                    </div>
+                </div>}
                 <div className="register-form-div">
-                    <div className="register-input-box"><input aria-label="Student name" autoComplete="name" required maxLength="120" value={studentDetail.name} onChange={(event) => handleOnChangeInputField(event, 'name')} className="input-box-register" placeholder="Student Name" type="text" /></div>
-                    <div className="register-input-box"><input aria-label="Student email" autoComplete="email" required maxLength="254" value={studentDetail.email} onChange={(event) => handleOnChangeInputField(event, 'email')} className="input-box-register" placeholder="Email" type="email" /></div>
+                    <div className="register-input-box"><input aria-label={`${studentDetail.recordType === 'employee' ? 'Employee' : 'Student'} name`} autoComplete="name" required maxLength="120" value={studentDetail.name} onChange={(event) => handleOnChangeInputField(event, 'name')} className="input-box-register" placeholder={`${studentDetail.recordType === 'employee' ? 'Employee' : 'Student'} Name`} type="text" /></div>
+                    <div className="register-input-box"><input aria-label="Patient email" autoComplete="email" required maxLength="254" value={studentDetail.email} onChange={(event) => handleOnChangeInputField(event, 'email')} className="input-box-register" placeholder="Email" type="email" /></div>
                     <div className="register-input-box"><input aria-label={studentDetail.recordType === 'employee' ? 'Employee ID' : 'Roll number'} required maxLength="50" value={studentDetail.recordType === 'employee' ? studentDetail.employeeId : studentDetail.roll} onChange={(event) => handleOnChangeInputField(event, studentDetail.recordType === 'employee' ? 'employeeId' : 'roll')} className="input-box-register" placeholder={studentDetail.recordType === 'employee' ? 'Employee ID' : 'Roll No.'} type="text" /></div>
-                    <div className="register-input-box"><input aria-label="Student mobile number" autoComplete="tel" required value={studentDetail.mobileNo} onChange={(event) => handleOnChangeInputField(event, 'mobileNo')} className="input-box-register" placeholder="Mobile No." type="tel" /></div>
-                    <div className="register-input-box"><input aria-label="Father or guardian name" value={studentDetail.fatherName} onChange={(event) => handleOnChangeInputField(event, 'fatherName')} className="input-box-register" placeholder="Father / Guardian Name" type="text" /></div>
-                    <div className="register-input-box"><input aria-label="Guardian mobile number" value={studentDetail.fatherMobile} onChange={(event) => handleOnChangeInputField(event, 'fatherMobile')} className="input-box-register" placeholder="Guardian Mobile No." type="tel" /></div>
+                    <div className="register-input-box"><input aria-label="Patient mobile number" autoComplete="tel" required value={studentDetail.mobileNo} onChange={(event) => handleOnChangeInputField(event, 'mobileNo')} className="input-box-register" placeholder="Mobile No." type="tel" /></div>
+                    {studentDetail.recordType === 'student' && <>
+                        <div className="register-input-box"><input aria-label="Father or guardian name" value={studentDetail.fatherName} onChange={(event) => handleOnChangeInputField(event, 'fatherName')} className="input-box-register" placeholder="Father / Guardian Name" type="text" /></div>
+                        <div className="register-input-box"><input aria-label="Guardian mobile number" value={studentDetail.fatherMobile} onChange={(event) => handleOnChangeInputField(event, 'fatherMobile')} className="input-box-register" placeholder="Guardian Mobile No." type="tel" /></div>
+                    </>}
                     <div className="register-input-box"><input aria-label="Address" autoComplete="street-address" value={studentDetail.address} onChange={(event) => handleOnChangeInputField(event, 'address')} className="input-box-register" placeholder="Address" type="text" /></div>
                     <div className="register-input-box"><textarea aria-label="Previous health details" maxLength="2000" value={studentDetail.previous_health} onChange={(event) => handleOnChangeInputField(event, 'previous_health')} className="input-box-register input-box-register-textarea" placeholder="Previous Health Details" /></div>
                     <div className="register-input-box"><input aria-label="Age" value={studentDetail.age} onChange={(event) => handleOnChangeInputField(event, 'age')} className="input-box-register" placeholder="Age" type="number" min="1" max="130" /></div>
                     <div className="register-input-box"><select aria-label="Blood group" value={studentDetail.bloodGroup} onChange={(event) => handleOnChangeInputField(event, 'bloodGroup')} className="input-box-register"><option value="">Blood Group</option>{['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((group) => <option key={group} value={group}>{group}</option>)}</select></div>
                 </div>
                 <div className="block-divs">
-                    <button type="submit" className="form-btn reg-btn">{studentDetail._id ? 'Update student' : 'Register student'}</button>
+                    <button type="submit" className="form-btn reg-btn">{studentDetail._id ? `Update ${studentDetail.recordType === 'employee' ? 'employee' : 'student'}` : `Register ${studentDetail.recordType === 'employee' ? 'employee' : 'student'}`}</button>
                     {studentDetail._id && <button type="button" className="button-primary reg-btn" onClick={openConsultationForm}>New consultation</button>}
                 </div>
             </form>
@@ -164,25 +177,25 @@ const RegisterStudent = (props) => {
 
         {createdStudentAccount?.password && studentDetail._id === createdStudentAccount.studentId && <section className="student-credentials-card" aria-live="polite">
             <div className="student-credentials-heading">
-                <div><p className="eyebrow">STUDENT SIGN-IN</p><h2>{createdStudentAccount.reissued ? 'Temporary password generated' : 'Account created'}</h2></div>
-                <span>Share with student</span>
+                <div><p className="eyebrow">{studentDetail.recordType === 'employee' ? 'EMPLOYEE SIGN-IN' : 'STUDENT SIGN-IN'}</p><h2>{createdStudentAccount.reissued ? 'Temporary password generated' : 'Account created'}</h2></div>
+                <span>Share with {studentDetail.recordType === 'employee' ? 'employee' : 'student'}</span>
             </div>
             <div className="student-credentials-grid">
                 <div className="student-credential-item"><span>Login email</span><strong>{createdStudentAccount.email}</strong></div>
                 <div className="student-credential-item student-password-item">
-                    <label htmlFor="new-student-password">Temporary password</label>
+                    <label htmlFor="new-patient-password">Temporary password</label>
                     <div className="student-password-control">
-                        <input id="new-student-password" type="text" value={createdStudentAccount.password} readOnly />
+                        <input id="new-patient-password" type="text" value={createdStudentAccount.password} readOnly />
                         <button type="button" className="student-password-copy" onClick={copyStudentPassword}><ContentCopyOutlinedIcon fontSize="small" /> Copy</button>
                     </div>
                 </div>
             </div>
-            <p className="student-credentials-note">Share or save this password now. It won’t be shown again after you search for another student or leave this page.</p>
+            <p className="student-credentials-note">Share or save this password now. It won’t be shown again after you search for another patient or leave this page.</p>
         </section>}
 
         {studentDetail._id && !(createdStudentAccount?.password && studentDetail._id === createdStudentAccount.studentId) && <section className="student-credentials-card student-password-unavailable" aria-live="polite">
             <div className="student-credentials-heading">
-                <div><p className="eyebrow">STUDENT SIGN-IN</p><h2>Password not available</h2></div>
+                <div><p className="eyebrow">{studentDetail.recordType === 'employee' ? 'EMPLOYEE SIGN-IN' : 'STUDENT SIGN-IN'}</p><h2>Password not available</h2></div>
                 <span>Stored securely</span>
             </div>
             <p className="student-credentials-note">The current password cannot be viewed because it is stored securely. Generate a new temporary password to replace it and show the new sign-in details here.</p>
@@ -198,7 +211,7 @@ const RegisterStudent = (props) => {
                 <span className="timeline-icon"><MedicalServicesOutlinedIcon /></span>
                 <div className="timeline-copy"><strong>{visit.chiefComplaint || 'Consultation'}</strong><span>{visit.diagnosis || 'Assessment not recorded'}</span><small>{formatDate(visit.visitAt)}</small></div>
                 <button type="button" className="visit-view-button" onClick={() => setSelectedConsultation(visit)} aria-label="View consultation"><span>View</span><RemoveRedEyeOutlinedIcon /></button>
-            </article>)}</div> : <div className="empty-state">No consultations are recorded for this student yet.</div>}
+            </article>)}</div> : <div className="empty-state">No consultations are recorded for this patient yet.</div>}
         </section>}
 
         {reportModal && <Modal header="New consultation" handleClose={closeConsultationForm}><ConsultationForm studentDetail={studentDetail} showLoader={props.showLoader} hideLoader={props.hideLoader} onCancel={closeConsultationForm} onSaved={handleConsultationSaved} /></Modal>}

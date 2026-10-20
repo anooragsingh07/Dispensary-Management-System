@@ -13,7 +13,7 @@ import ManageEvent from './ManageEvent/manageEvent';
 import './adminDashboard.css';
 
 const modules = [
-  { to: '/admin/register-student', title: 'Register student', description: 'Create a student profile and record a visit.', icon: <PersonAddAlt1OutlinedIcon /> },
+  { to: '/admin/register-student', title: 'Register patient', description: 'Create a student or employee profile and record a visit.', icon: <PersonAddAlt1OutlinedIcon /> },
   { to: '/admin/manage-medicine', title: 'Medicine stock', description: 'Review quantities and update medicine details.', icon: <Inventory2OutlinedIcon /> },
   { to: '/admin/records', title: 'Visit records', description: 'Browse dispensary visits by month and year.', icon: <HistoryOutlinedIcon /> },
   { to: '/admin/facility', title: 'Health-centre facilities', description: 'Update the services available on campus.', icon: <MedicalServicesOutlinedIcon /> },

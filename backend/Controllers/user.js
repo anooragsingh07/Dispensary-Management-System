@@ -45,10 +45,10 @@ const normalizeStudentFields = (body, current = {}, { requireMobile = true } = {
     data.recordType = recordType;
     data.roll = campusId;
     data.employeeId = recordType === 'employee' ? campusId : '';
-    if (!data.name || data.name.length > 120) return { error: 'Enter a student name of 1 to 120 characters' };
+    if (!data.name || data.name.length > 120) return { error: 'Enter a patient name of 1 to 120 characters' };
     if (!campusId || campusId.length > 50) return { error: recordType === 'employee' ? 'Enter an employee ID of 1 to 50 characters' : 'Enter a roll number of 1 to 50 characters' };
-    if (requireMobile && !data.mobileNo) return { error: 'Student mobile number is required' };
-    if (data.mobileNo && (data.mobileNo.length > 24 || !isPhone(data.mobileNo))) return { error: 'Enter a valid student mobile number' };
+    if (requireMobile && !data.mobileNo) return { error: 'Patient mobile number is required' };
+    if (data.mobileNo && (data.mobileNo.length > 24 || !isPhone(data.mobileNo))) return { error: 'Enter a valid patient mobile number' };
     if (data.fatherName?.length > 120) return { error: 'Guardian name must be 120 characters or fewer' };
     if (data.fatherMobile && (data.fatherMobile.length > 24 || !isPhone(data.fatherMobile))) return { error: 'Enter a valid guardian mobile number' };
     if (data.address?.length > 500) return { error: 'Address must be 500 characters or fewer' };
@@ -158,12 +158,12 @@ exports.getCurrentUser = (req, res) => res.status(200).json({ user: sanitizeUser
 exports.updateStudentById = async (req, res) => {
     try {
         const student = await Student.findById(req.params.id);
-        if (!student) return res.status(404).json({ error: 'Student not found' });
+        if (!student) return res.status(404).json({ error: 'Patient not found' });
         const user = await User.findOne({ studentId: student._id });
-        if (!user) return res.status(404).json({ error: 'Student login account not found' });
+        if (!user) return res.status(404).json({ error: 'Patient login account not found' });
 
         const email = Object.prototype.hasOwnProperty.call(req.body, 'email') ? normalizeEmail(req.body.email) : user.email;
-        if (!isEmail(email)) return res.status(400).json({ error: 'Enter a valid student email address' });
+        if (!isEmail(email)) return res.status(400).json({ error: 'Enter a valid patient email address' });
         const profileResult = normalizeStudentFields(req.body, student.toObject());
         if (profileResult.error) return res.status(400).json({ error: profileResult.error });
         if (await User.exists({ _id: { $ne: user._id }, email })) return res.status(409).json({ error: 'That email belongs to another account' });
@@ -182,9 +182,9 @@ exports.updateStudentById = async (req, res) => {
         }
         return res.status(200).json({ message: student.recordType === 'employee' ? 'Employee details updated' : 'Student details updated', student: studentResponse(student, user) });
     } catch (error) {
-        if (error.code === 11000) return res.status(409).json({ error: 'That email or roll number belongs to another account' });
-        console.error('Student update failed:', error);
-        return res.status(500).json({ error: 'Unable to update student details right now' });
+        if (error.code === 11000) return res.status(409).json({ error: 'That email or campus ID belongs to another account' });
+        console.error('Patient update failed:', error);
+        return res.status(500).json({ error: 'Unable to update patient details right now' });
     }
 };
 
@@ -192,23 +192,23 @@ exports.getStudentByRollNo = async (req, res) => {
     try {
         const roll = normalizeRoll(req.params.roll);
         const student = await Student.findOne({ roll });
-        if (!student) return res.status(404).json({ error: 'Student not found' });
+        if (!student) return res.status(404).json({ error: 'Patient not found' });
         const user = await User.findOne({ studentId: student._id }).select('email');
-        if (!user) return res.status(404).json({ error: 'Student login account not found' });
+        if (!user) return res.status(404).json({ error: 'Patient login account not found' });
         return res.status(200).json({ student: studentResponse(student, user) });
     } catch (error) {
         console.error('Student lookup failed:', error);
-        return res.status(500).json({ error: 'Unable to find that student right now' });
+        return res.status(500).json({ error: 'Unable to find that patient right now' });
     }
 };
 
 exports.issueStudentTemporaryPassword = async (req, res) => {
     try {
         const student = await Student.findById(req.params.id);
-        if (!student) return res.status(404).json({ error: 'Student not found' });
+        if (!student) return res.status(404).json({ error: 'Patient not found' });
 
         const user = await User.findOne({ studentId: student._id });
-        if (!user || !['student', 'employee'].includes(user.role)) return res.status(404).json({ error: 'Student or employee login account not found' });
+        if (!user || !['student', 'employee'].includes(user.role)) return res.status(404).json({ error: 'Patient login account not found' });
 
         const temporaryPassword = crypto.randomBytes(9).toString('base64url');
         user.password = await bcrypt.hash(temporaryPassword, 12);
@@ -229,25 +229,31 @@ exports.issueStudentTemporaryPassword = async (req, res) => {
 exports.registerStudentByStaff = async (req, res) => {
     try {
         const email = normalizeEmail(req.body.email);
-        const profileResult = normalizeStudentFields({ ...req.body, recordType: 'student', employeeId: '' });
-        if (!isEmail(email)) return res.status(400).json({ error: 'Enter a valid student email address' });
+        const recordType = String(req.body.recordType || 'student').trim().toLowerCase();
+        if (!['student', 'employee'].includes(recordType)) return res.status(400).json({ error: 'Choose student or college employee registration' });
+        const profileResult = normalizeStudentFields({
+            ...req.body,
+            recordType,
+            employeeId: recordType === 'employee' ? req.body.employeeId ?? req.body.roll : '',
+        });
+        if (!isEmail(email)) return res.status(400).json({ error: 'Enter a valid patient email address' });
         if (profileResult.error) return res.status(400).json({ error: profileResult.error });
         if (await User.exists({ email }) || await Student.exists({ roll: profileResult.data.roll })) {
-            return res.status(409).json({ error: 'An account already exists with that email or roll number' });
+            return res.status(409).json({ error: 'An account already exists with that email or campus ID' });
         }
 
         const temporaryPassword = crypto.randomBytes(6).toString('base64url');
-        const { student, user } = await createStudentAccount({ profile: profileResult.data, email, password: temporaryPassword });
+        const { student, user } = await createStudentAccount({ profile: profileResult.data, email, password: temporaryPassword, role: recordType });
 
         return res.status(201).json({
-            message: 'Student account created',
+            message: recordType === 'employee' ? 'Employee account created' : 'Student account created',
             student: studentResponse(student, user),
             temporaryPassword,
         });
     } catch (error) {
-        if (error.code === 11000) return res.status(409).json({ error: 'An account already exists with that email or roll number' });
-        console.error('Student account creation failed:', error);
-        return res.status(500).json({ error: 'Unable to register this student right now' });
+        if (error.code === 11000) return res.status(409).json({ error: 'An account already exists with that email or campus ID' });
+        console.error('Patient account creation failed:', error);
+        return res.status(500).json({ error: 'Unable to register this patient right now' });
     }
 };
 
